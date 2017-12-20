@@ -26,5 +26,6 @@
     "test-ci": "mocha-webpack --webpack-config webpack.config.js --webpack-env test"
   },
   "dependencies": {
+    "lodash":"^4.17.4"
   }
 }
