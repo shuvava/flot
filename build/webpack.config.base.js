@@ -11,10 +11,11 @@ module.exports = (env) => {
         // },
         entry: {
             index: './src/index.js',
+            jquery: ['./bak/jquery'],
         },
         resolve: {
             extensions: ['.js'],
-            modules: ['node_modules', 'bower_components'],
+            modules: ['node_modules', 'bower_components', 'bak'],
             descriptionFiles: ['package.json', '.bower.json'],
         },
         output: {
@@ -51,6 +52,11 @@ module.exports = (env) => {
                 'process.env': {
                     NODE_ENV: env.release ? 'debug' : 'production',
                 },
+            }),
+            new webpack.optimize.CommonsChunkPlugin({
+                names: ['jquery'],
+                filename: '[name].js',
+                minChunks: Infinity,
             }),
         ],
     };
