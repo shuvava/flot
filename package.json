@@ -1,11 +1,30 @@
 {
-	"name": "Flot",
-	"version": "0.8.3",
-	"main": "jquery.flot.js",
-	"scripts": {
-		"test": "make test"
-	},
-	"devDependencies": {
-		"jshint": "0.9.1"
-	}
+  "author": {
+    "name": "Vladimir Shurgyin"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-preset-env": "^1.6.1",
+    "eslint": "^4.13.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-loader": "^1.9.0",
+    "eslint-plugin-import": "^2.8.0",
+    "mocha": "^4.0.1",
+    "mocha-webpack": "^1.0.1",
+    "webpack": "^3.10.0",
+    "webpack-bundle-analyzer": "^2.9.1",
+    "webpack-cleanup-plugin": "^0.5.1",
+    "webpack-merge": "^4.1.1",
+    "webpack-node-externals": "^1.6.0"
+  },
+  "scripts": {
+    "build:dev": "webpack --config ./webpack.config.js",
+    "build:release": "webpack --config ./webpack.config.js --env.release",
+    "test": "mocha-webpack --webpack-config webpack.config.js --webpack-env test --watch",
+    "test-ci": "mocha-webpack --webpack-config webpack.config.js --webpack-env test"
+  },
+  "dependencies": {
+  }
 }

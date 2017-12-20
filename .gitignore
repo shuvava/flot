@@ -1,3 +1,29 @@
-*.min.js
-!excanvas.min.js
+# Dependency directories
 node_modules/
+bower_components/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+#Generic
+.*.swp
+._*
+.DS_Store
+package-lock.json
+
+#directories of compiled files
+dist/
+libs/
+
+# vscode
+.vscode/
