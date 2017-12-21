@@ -5,9 +5,9 @@ const config = Object.freeze({
     analytics: false,
     test: false,
     clean: true,
-    umd: true,
+    umd: false,
     globals: {
-        jquery: true,
+        jquery: 'external',
     },
     babel: {
         presets: ['env'],

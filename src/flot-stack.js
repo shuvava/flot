@@ -29,7 +29,7 @@
  * interpolation. If there's a second y value, it's also adjusted (e.g for bar charts or filled areas).
  */
 import $ from 'jquery';
-import 'Flot';
+import '../bak/jquery.flot';
 
 const _MODE_TYPE_ = 'stack';
 
@@ -54,108 +54,113 @@ function processDatapoints(plot, series, dataPoints) {
     if (!series.stack) {
         return;
     }
-    const other = findPreviousStackSeries(series, plot.getData());
+    const prevSeries = findPreviousStackSeries(series, plot.getData());
+    if (!prevSeries) {
+        return;
+    }
     const { pointsize: pointSize, points } = dataPoints;
-    const { pointsize: otherps, points: otherpoints } = other.datapoints;
-    const withlines = series.lines.show;
+    const { pointsize: prevPointSize, points: prevPoints } = prevSeries.datapoints;
+    const withLines = series.lines.show;
     const { horizontal } = series.bars;
-    const withbottom = pointSize > 2 && (horizontal ? dataPoints.format[2].x : dataPoints.format[2].y);
-    const withsteps = withlines && series.lines.steps;
+    const withBottom = pointSize > 2 && (horizontal ? dataPoints.format[2].x : dataPoints.format[2].y);
+    const withSteps = withLines && series.lines.steps;
     const keyOffset = horizontal ? 1 : 0;
     const accumulateOffset = horizontal ? 0 : 1;
     const newpoints = [];
 
     let fromgap = true;
-    let i = 0;// index in current series with stack
-    let j = 0;// index in previous series with stack
+    let inxSrs = 0;// index in current series with stack
+    let inxPrevSrs = 0;// index in previous series with stack
 
     while (true) {
-        if (i >= points.length) {
+        if (inxSrs >= points.length) {
             break;
         }
         const _len = newpoints.length;
 
-        if (points[i] === null) {
+        if (points[inxSrs] === null) {
             // copy gaps
             for (let m = 0; m < pointSize; m += 1) {
-                newpoints.push(points[i + m]);
-                i += pointSize;
+                newpoints.push(points[inxSrs + m]);
+                inxSrs += pointSize;
             }
-        } else if (otherpoints[j] == null) {
+        } else if (prevPoints[inxPrevSrs] == null) {
             // copy gaps
             for (let m = 0; m < pointSize; m += 1) {
                 newpoints.push(null);
             }
             fromgap = true;
-            j += otherps;
-        } else if (j >= otherpoints.length) {
+            inxPrevSrs += prevPointSize;
+        } else if (inxPrevSrs >= prevPoints.length) {
             // for lines, we can't use the rest of the points
-            if (!withlines) {
+            if (!withLines) {
                 for (let m = 0; m < pointSize; m += 1) {
-                    newpoints.push(points[i + m]);
+                    newpoints.push(points[inxSrs + m]);
                 }
             }
-            i += pointSize;
+            inxSrs += pointSize;
         } else {
             // cases where we actually got two points
-            const px = points[i + keyOffset];
-            const py = points[i + accumulateOffset];
-            const qx = otherpoints[j + keyOffset];
-            const qy = otherpoints[j + accumulateOffset];
+            const px = points[inxSrs + keyOffset];
+            const py = points[inxSrs + accumulateOffset];
+            const qx = prevPoints[inxPrevSrs + keyOffset];
+            const qy = prevPoints[inxPrevSrs + accumulateOffset];
             let bottom = 0;
 
             if (px === qx) {
                 for (let m = 0; m < pointSize; m += 1) {
-                    newpoints.push(points[i + m]);
+                    newpoints.push(points[inxSrs + m]);
                 }
 
                 newpoints[_len + accumulateOffset] += qy;
                 bottom = qy;
 
-                i += pointSize;
-                j += otherps;
+                inxSrs += pointSize;
+                inxPrevSrs += prevPointSize;
             } else if (px > qx) {
                 // we got past point below, might need to
                 // insert interpolated extra point
-                if (withlines && i > 0 && points[i - pointSize] != null) {
-                    const intery = py + (points[i - pointSize + accumulateOffset] - py) * (qx - px) / (points[i - pointSize + keyOffset] - px);
+                const _diff = inxSrs - pointSize;
+                if (withLines && inxSrs > 0 && points[_diff] != null) {
+                    const intery = py + (points[_diff + accumulateOffset] - py) * (qx - px) / (points[_diff + keyOffset] - px);
                     newpoints.push(qx);
                     newpoints.push(intery + qy);
                     for (let m = 2; m < pointSize; m += 1) {
-                        newpoints.push(points[i + m]);
+                        newpoints.push(points[inxSrs + m]);
                     }
                     bottom = qy;
                 }
 
-                j += otherps;
+                inxPrevSrs += prevPointSize;
             } else { // px < qx
-                if (fromgap && withlines) {
+                if (fromgap && withLines) {
                     // if we come from a gap, we just skip this point
-                    i += pointSize;
+                    inxSrs += pointSize;
                     continue;
                 }
                 for (let m = 0; m < pointSize; m += 1) {
-                    newpoints.push(points[i + m]);
+                    newpoints.push(points[inxSrs + m]);
                 }
 
                 // we might be able to interpolate a point below,
                 // this can give us a better y
-                if (withlines && j > 0 && otherpoints[j - otherps] != null) {
-                    bottom = qy + (otherpoints[j - otherps + accumulateOffset] - qy) * (px - qx) / (otherpoints[j - otherps + keyOffset] - qx);
+                const _diff = inxPrevSrs - prevPointSize;
+                if (withLines && inxPrevSrs > 0 && prevPoints[_diff] != null) {
+                    bottom = qy + (prevPoints[_diff + accumulateOffset] - qy) * (px - qx) / (prevPoints[_diff + keyOffset] - qx);
                 }
                 newpoints[_len + accumulateOffset] += bottom;
 
-                i += pointSize;
+                inxSrs += pointSize;
             }
 
             fromgap = false;
-            if (_len !== newpoints.length && withbottom) {
+            if (_len !== newpoints.length && withBottom) {
                 newpoints[_len + 2] += bottom;
             }
         }
 
         // maintain the line steps invariant
-        if (withsteps && _len !== newpoints.length && _len > 0
+        if (withSteps && _len !== newpoints.length && _len > 0
             && newpoints[_len] !== null
             && newpoints[_len] !== newpoints[_len - pointSize]
             && newpoints[_len + 1] !== newpoints[_len - pointSize + 1]) {

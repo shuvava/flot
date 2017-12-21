@@ -185,4 +185,4 @@ charts or filled areas).
         name: 'stack',
         version: '1.2'
     });
-})(jQuery);
+})(window.$);

@@ -6,12 +6,8 @@ module.exports = (env) => {
     }
     const config = {
         stats: { modules: false },
-        // node: {
-        //     fs: 'empty',
-        // },
         entry: {
             index: './src/index.js',
-            jquery: ['./bak/jquery'],
         },
         resolve: {
             extensions: ['.js'],
@@ -24,8 +20,8 @@ module.exports = (env) => {
             // public path
             // publicPath: env.web,
             // file name
-            filename: '[name].js',
-            chunkFilename: '[id].js',
+            filename: '[name].bundle.js',
+            chunkFilename: '[id].bundle.js',
         },
         module: {
             rules: [
@@ -52,11 +48,7 @@ module.exports = (env) => {
                 'process.env': {
                     NODE_ENV: env.release ? 'debug' : 'production',
                 },
-            }),
-            new webpack.optimize.CommonsChunkPlugin({
-                names: ['jquery'],
-                filename: '[name].js',
-                minChunks: Infinity,
+                PRODUCTION: env.release,
             }),
         ],
     };

@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import 'Flot';
+// import 'Flot';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
 import findIndex from 'lodash/findIndex';

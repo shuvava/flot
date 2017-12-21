@@ -1,0 +1,337 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Flot Examples: Stacking</title>
+    <link href="../examples.css" rel="stylesheet" type="text/css">
+    <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../../excanvas.min.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript" src="../../bak/jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="../../dist/index.bundle.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+    function showTooltip(id, x, y, contents) {
+        $(`<div id="${id}_tooltip">${contents}</div>`)
+            .addClass('plotTootTip')
+            .addClass('plotTootTip-bar-chart')
+            .css({
+                top: y + 5,
+                left: x - 25
+            })
+            .appendTo('body')
+            .fadeIn(200);
+    }
+    function getWidthOfText(txt, fontname, fontsize) {
+        if (getWidthOfText.c === undefined) {
+            getWidthOfText.c = document.createElement('canvas');
+            getWidthOfText.ctx = getWidthOfText.c.getContext('2d');
+        }
+        getWidthOfText.ctx.font = `${fontsize} ${fontname}`;
+        return getWidthOfText.ctx.measureText(txt).width;
+    }
+    function plothover(event, pos, item) {
+        if (!item || event.data.previousPoint === item.datapoint) {
+            $(`#${event.data.elementId}_tooltip`).fadeOut();
+            return false;
+        }
+        event.data.previousPoint = item.datapoint;
+        $(`#${event.data.elementId}_tooltip`).remove();
+        const yValue = item.datapoint[1];
+        const xValue = item.datapoint[0];
+        const { series: { yaxis, xaxis } } = item;
+        const msg = `${yaxis.tickFormatter(yValue, yaxis)}&nbsp;(${xaxis.tickFormatter(xValue, xaxis)})`;
+        showTooltip(event.data.elementId, item.pageX, item.pageY, msg);
+        return false;
+    }
+    function intFormatter(value) {
+        return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+    function dateToString(dt) {
+        const newDate = new Date(dt);
+        const options = { year: 'numeric', month: 'short' /* , timeZone: 'UTC' */};
+        return newDate.toLocaleDateString(window.navigator.language, options);
+    }
+    function intToDate(val) {
+        return new Date(val * 1000);
+    }
+    function updateChart(chart) {
+        return () => {
+            const xAxes = chart.getXAxes();
+            const placeholder = chart.getPlaceholder();
+            // somebody might have hidden us and we can't plot
+            // when we don't have the dimensions
+            if (placeholder.width() === 0 || placeholder.height() === 0) { return; }
+
+            const data = chart.getData();
+            const width = placeholder.width();
+            const dt = intToDate(data[0].data[0][0]);
+            const itemWidth = getWidthOfText(dateToString(dt), xAxes[0].options.font.family, xAxes[0].options.font.size);
+            xAxes[0].options.tickSize = Math.ceil(xAxes[0].options.max * itemWidth * 1.7 / width);
+
+            chart.resize();
+            chart.setupGrid();
+            chart.draw();
+        };
+    }
+/*****/
+function baseFindIndex(array, predicate, fromIndex, fromRight) {
+  var length = array.length,
+      index = fromIndex + (fromRight ? 1 : -1);
+
+  while ((fromRight ? index-- : ++index < length)) {
+    if (predicate(array[index], index, array)) {
+      return index;
+    }
+  }
+  return -1;
+}
+function baseIteratee(value) {
+  // Don't store the `typeof` result in a variable to avoid a JIT bug in Safari 9.
+  // See https://bugs.webkit.org/show_bug.cgi?id=156034 for more details.
+  if (typeof value == 'function') {
+    return value;
+  }
+  if (value == null) {
+    return identity;
+  }
+  if (typeof value == 'object') {
+    return isArray(value)
+      ? baseMatchesProperty(value[0], value[1])
+      : baseMatches(value);
+  }
+  return property(value);
+}
+function toInteger(value) {
+  var result = toFinite(value),
+      remainder = result % 1;
+
+  return parseInt(value, 10);
+}
+function findIndex(array, predicate, fromIndex) {
+  var length = array == null ? 0 : array.length;
+  if (!length) {
+    return -1;
+  }
+  var index = fromIndex == null ? 0 : toInteger(fromIndex);
+  if (index < 0) {
+    index = nativeMax(length + index, 0);
+  }
+  return baseFindIndex(array, baseIteratee(predicate, 3), index);
+}
+/*****/
+var dt = new Date('01/21/2001');
+        var d1 = [];
+        for (var i = 0; i <= 10; i += 1) {
+            d1.push([dt.setMonth(dt.getMonth() + i) / 1000, parseInt(Math.random() * 30)]);
+            //d1.push([i, parseInt(Math.random() * 30)]);
+        }
+        dt = new Date('01/21/2001');
+        var d2 = [];
+        for (var i = 0; i <= 10; i += 1) {
+            d2.push([dt.setMonth(dt.getMonth() + i) / 1000, parseInt(Math.random() * 30)]);
+            //d2.push([i, parseInt(Math.random() * 30)]);
+        }
+        dt = new Date('01/21/2001');
+        var d3 = [];
+        for (var i = 0; i <= 10; i += 1) {
+            d3.push([dt.setMonth(dt.getMonth() + i) / 1000, parseInt(Math.random() * 30)]);
+            //d3.push([i, parseInt(Math.random() * 30)]);
+        }
+        var dataSet = [
+            {
+                label: 'Bars A',
+                data: d1,
+                bars: {
+                    show: true,
+                    barWidth: 0.4,
+                    align: 'center',
+                    fillColor: 'rgba(99, 167, 10, 0.75)',
+                },
+            }, {
+                label: 'Bars B',
+                data: d2,
+                bars: {
+                    show: true,
+                    barWidth: 0.4,
+                    align: 'center',
+                    fillColor: 'rgba(00, 119, 179, 0.75)',
+                },
+            }
+            , {
+                label: 'Line A',
+                data: d3,
+                yaxis: 2,
+                lines: {
+                    show: true,
+                    fill: false,
+                    fillColor: 'rgba(235, 26, 231, 0.15)'
+                },
+                points: {
+                    show: true
+                }
+            }
+        ];
+    var config = Object.freeze({
+        colors: ['#63A70A', '#0077b3', '#EB1AE7', '#FF3300', '#D6CB2D', '#6A1AEB', '#BDEA74'],
+        legend: {
+            show: false,
+            backgroundOpacity: 0.25,
+            noColumns: 1,
+            margin: [-0, -30]
+        },
+        series: {
+            stack: true,
+            bars: {
+                show: false,
+                barWidth: 0.8,
+                align: 'center',
+                fillColor: 'rgba(99, 167, 10, 0.75)'
+            },
+            lines: {
+                show: false,
+                fill: true,
+                fillColor: 'rgba(99, 167, 10, 0.25)',
+                lineWidth: 3
+            },
+            points: {
+                show: false,
+                lineWidth: 3,
+                fill: true
+            },
+            shadowSize: 0,
+            highlightColor: 'rgba(0, 0, 0, 0.10)'
+        },
+        grid: {
+            borderWidth: 0,
+            hoverable: true,
+            clickable: true
+        },
+        xaxes: [{
+            mode: 'categories',
+            ticks: 5,
+            tickSize: 2,
+            max: 11,
+            min: 0,
+            tickColor: 'rgba(99, 167, 10, 0.05)',
+            color: '#989898',
+            font: {
+                size: 11,
+                family: 'Verdana, Arial',
+                weight: 300
+            },
+            indexGenerator: function (item, categories) {
+                const dt = intToDate(item);
+                const index = findIndex(categories, category => category[1] === dateToString(dt));
+                if (index === -1) {
+                    categories.push([categories.length, dateToString(dt)]);
+                    return categories.length - 1;
+                }
+                return index;
+            }
+        }],
+        yaxes: [{
+            tickFormatter: intFormatter,
+            tickColor: 'rgba(99, 167, 10, 0.10)',
+            color: '#989898',
+            font: {
+                size: 11,
+                family: 'Verdana, Arial',
+                weight: 300
+            }
+        }
+        , {
+            tickFormatter: intFormatter,
+            tickDecimals: 0,
+            alignTicksWithAxis: 1,
+            position: 'right',
+            tickColor: 'rgba(99, 167, 10, 0.10)',
+            color: '#989898',
+            font: {
+                size: 11,
+                family: 'Verdana, Arial',
+                weight: 300
+            }
+        }
+    ]
+    });
+
+        var stack = 0,
+            bars = true,
+            lines = false,
+            steps = false;
+
+        function plotWithOptions() {
+            $.plot("#placeholder",dataSet, config);
+            /*
+            $.plot("#placeholder", [ d1, d2, d3 ], {
+                series: {
+                    stack: stack,
+                    lines: {
+                        show: lines,
+                        fill: true,
+                        steps: steps
+                    },
+                    bars: {
+                        show: bars,
+                        barWidth: 0.6
+                    }
+                }
+            });
+*/
+        }
+
+        plotWithOptions();
+
+        // $(".stackControls button").click(function (e) {
+        //     e.preventDefault();
+        //     stack = $(this).text() == "With stacking" ? true : null;
+        //     plotWithOptions();
+        // });
+
+        // $(".graphControls button").click(function (e) {
+        //     e.preventDefault();
+        //     bars = $(this).text().indexOf("Bars") != -1;
+        //     lines = $(this).text().indexOf("Lines") != -1;
+        //     steps = $(this).text().indexOf("steps") != -1;
+        //     plotWithOptions();
+        // });
+
+        // Add the Flot version string to the footer
+
+        $("#footer").prepend("Flot " + $.plot.version + " &ndash; ");
+    });
+
+    </script>
+</head>
+<body>
+
+    <div id="header">
+        <h2>Stacking</h2>
+    </div>
+
+    <div id="content">
+
+        <div class="demo-container">
+            <div id="placeholder" class="demo-placeholder"></div>
+        </div>
+
+        <p>With the stack plugin, you can have Flot stack the series. This is useful if you wish to display both a total and the constituents it is made of. The only requirement is that you provide the input sorted on x.</p>
+
+        <p class="stackControls">
+            <button>With stacking</button>
+            <button>Without stacking</button>
+        </p>
+
+        <p class="graphControls">
+            <button>Bars</button>
+            <button>Lines</button>
+            <button>Lines with steps</button>
+        </p>
+
+    </div>
+
+    <div id="footer">
+        Copyright &copy; 2007 - 2014 IOLA and Ole Laursen
+    </div>
+
+</body>
+</html>

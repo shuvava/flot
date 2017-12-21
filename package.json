@@ -20,12 +20,13 @@
     "webpack-node-externals": "^1.6.0"
   },
   "scripts": {
+    "build:watch": "webpack --config ./webpack.config.js  --watch",
     "build:dev": "webpack --config ./webpack.config.js",
     "build:release": "webpack --config ./webpack.config.js --env.release",
     "test": "mocha-webpack --webpack-config webpack.config.js --webpack-env test --watch",
     "test-ci": "mocha-webpack --webpack-config webpack.config.js --webpack-env test"
   },
   "dependencies": {
-    "lodash":"^4.17.4"
+    "lodash": "^4.17.4"
   }
 }
