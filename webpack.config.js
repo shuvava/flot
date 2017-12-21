@@ -13,6 +13,7 @@ const umd = require('./build/webpack.config.umd');
 module.exports = (env) => {
     const _env = setEnv(env);
     _env.dir = path.join(__dirname, _env.dir);
+    _env.rootDir = __dirname;
 
     const configs = [
         test(_env),

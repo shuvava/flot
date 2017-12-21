@@ -1,5 +1,5 @@
 /* globals describe it */
-const assert = require('assert');
+const { assert } = require('chai');
 
 describe('Array', () => {
     describe('#indexOf()', () => {

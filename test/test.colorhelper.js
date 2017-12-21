@@ -1,5 +1,5 @@
 /* globals describe it */
-const assert = require('assert');
+const { assert } = require('chai');
 const ColorHelper = require('../src/colorhelper');
 
 describe('ColorHelper', () => {

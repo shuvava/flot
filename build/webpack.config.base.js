@@ -1,3 +1,4 @@
+const path = require('path');
 const webpack = require('webpack');
 
 module.exports = (env) => {
@@ -11,7 +12,11 @@ module.exports = (env) => {
         },
         resolve: {
             extensions: ['.js'],
-            modules: ['node_modules', 'bower_components', 'bak'],
+            modules: [
+                path.resolve(env.rootDir, './node_modules'),
+                path.resolve(env.rootDir, './bower_components'),
+                path.resolve(env.rootDir, './bak'),
+            ],
             descriptionFiles: ['package.json', '.bower.json'],
         },
         output: {
@@ -28,7 +33,7 @@ module.exports = (env) => {
                 {
                     enforce: 'pre',
                     test: /\.js$/,
-                    exclude: /node_modules/,
+                    exclude: /(\/node_modules\/|test\.js$)/,
                     loader: 'eslint-loader',
                     options: {
                         fix: true,
@@ -37,7 +42,7 @@ module.exports = (env) => {
                 },
                 {
                     test: /\.js$/,
-                    exclude: /node_modules/,
+                    exclude: /(\/node_modules\/|test\.js$)/, // /node_modules/,
                     loader: 'babel-loader',
                     options: env.babel,
                 },
