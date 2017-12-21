@@ -1,10 +1,12 @@
 const webPackConfFn = require('./webpack.config');
-const karmaWebpack = require('karma-webpack');
-const karmaMocha = require('karma-mocha');
-const karmaChromeLauncher = require('karma-chrome-launcher');
+// const karmaWebpack = require('karma-webpack');
+// const karmaMocha = require('karma-mocha');
+// const karmaChromeLauncher = require('karma-chrome-launcher');
 
 module.exports = (config) => {
-    const webPackConf = webPackConfFn({ test: true });
+    const webPackConf = webPackConfFn({
+        test: true,
+    });
     config.set({
         basePath: '',
         files: [
@@ -48,7 +50,7 @@ module.exports = (config) => {
         },
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
-        singleRun: true,
+        singleRun: false,
         concurrency: Infinity,
         // plugins: [
         //     karmaWebpack,

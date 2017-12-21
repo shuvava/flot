@@ -17,20 +17,20 @@ module.exports = (env) => {
     // jQuery lib included into bundle
     // whoever for old plugins bundle "global" variable will be exposed
     const config = {
-        entry: {
-            jquery: ['jquery'],
-        },
+        // entry: {
+        //     jquery: ['jquery'],
+        // },
         plugins: [
             new webpack.ProvidePlugin({
                 $: 'jquery',
                 jQuery: 'jquery',
                 'window.jQuery': 'jquery',
             }),
-            new webpack.optimize.CommonsChunkPlugin({
-                names: ['jquery'],
-                filename: '[name].bundle.js',
-                minChunks: Infinity,
-            }),
+            // new webpack.optimize.CommonsChunkPlugin({
+            //     names: ['jquery'],
+            //     filename: '[name].bundle.js',
+            //     minChunks: Infinity,
+            // }),
         ],
     };
     return config;

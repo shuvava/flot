@@ -33,7 +33,8 @@
     "build:release": "webpack --config ./webpack.config.js --env.release",
     "test": "mocha-webpack test/**/*.js --webpack-config webpack.config.js --webpack-env test --watch",
     "test-ci": "mocha-webpack test/**/*.js --webpack-config webpack.config.js --webpack-env test",
-    "cover": "env NODE_ENV=coverage nyc --reporter=lcov --reporter=text npm run test-ci"
+    "cover": "env NODE_ENV=coverage nyc --reporter=lcov --reporter=text npm run test-ci",
+    "karma": "karma start karma.conf.js"
   },
   "dependencies": {
     "lodash": "^4.17.4"
