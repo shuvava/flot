@@ -17,14 +17,19 @@
     "webpack-bundle-analyzer": "^2.9.1",
     "webpack-cleanup-plugin": "^0.5.1",
     "webpack-merge": "^4.1.1",
-    "webpack-node-externals": "^1.6.0"
+    "webpack-node-externals": "^1.6.0",
+    "karma": "^1.7.1",
+    "karma-mocha": "^1.3.0",
+    "nyc": "^11.4.1"
   },
   "scripts": {
     "build:watch": "webpack --config ./webpack.config.js  --watch",
     "build:dev": "webpack --config ./webpack.config.js",
+    "build:dev:stat": "webpack --config ./webpack.config.js --env.analytics",
     "build:release": "webpack --config ./webpack.config.js --env.release",
     "test": "mocha-webpack --webpack-config webpack.config.js --webpack-env test --watch",
-    "test-ci": "mocha-webpack --webpack-config webpack.config.js --webpack-env test"
+    "test-ci": "mocha-webpack --webpack-config webpack.config.js --webpack-env test",
+    "cover": "env NODE_ENV=coverage nyc --reporter=lcov --reporter=text npm run test-ci"
   },
   "dependencies": {
     "lodash": "^4.17.4"

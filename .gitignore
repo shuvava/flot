@@ -8,6 +8,10 @@ bower_components/
 # Optional eslint cache
 .eslintcache
 
+# nyc output
+.nyc_output
+coverage
+
 # Logs
 logs
 *.log
