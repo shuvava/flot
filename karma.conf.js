@@ -1,61 +1,63 @@
-const webPackConfFn = require('./webpack.config');
-// const karmaWebpack = require('karma-webpack');
-// const karmaMocha = require('karma-mocha');
-// const karmaChromeLauncher = require('karma-chrome-launcher');
+const webPackConfFn = require('./webpack.config-karma');
+const path = require('path');
 
 module.exports = (config) => {
     const webPackConf = webPackConfFn({
-        test: true,
+        // test: true,
+        // globals: {
+        //     jquery: true,
+        // },
     });
     config.set({
-        basePath: '',
+        basePath: path.resolve(__dirname, './'),
         files: [
-            './test/**/*.js',
+            './bak/jquery.js',
+            { pattern: './src/**/*.js', included: false },
+            { pattern: './test/**/*.spec.js', included: true },
+            // './test/test.jquery.js',
         ],
         // frameworks to use
-        frameworks: ['mocha'],
+        frameworks: ['mocha', 'chai'],
         preprocessors: {
-            './test/**/*.js': ['webpack'],
+            './test/**/*.spec.js': ['webpack', 'sourcemap'],
         },
-        reporters: ['progress', 'spec'],
+        reporters: ['progress', 'spec', 'coverage-istanbul'],
         // reporters: ['spec', 'coverage'],
         // coverageReporter: {
-        //     dir: 'build/coverage/',
+        //     dir: './coverage/',
         //     reporters: [
         //         { type: 'html' },
         //         { type: 'text' },
         //         { type: 'text-summary' },
         //     ],
         // },
-        // client: {
-        //     mocha: {
-        //         reporter: 'html',
-        //     },
-        // },
+        coverageIstanbulReporter: {
+            reports: ['text-summary', 'html', 'cobertura'],
+            'report-config': {
+                html: { subdir: 'html-report' },
+            },
+            fixWebpackSourcePaths: true,
+        },
+        client: {
+            captureConsole: true,
+            mocha: {
+                bail: true,
+                ui: 'bdd',
+            },
+        },
         webpack: webPackConf,
         webpackMiddleware: {
             // webpack-dev-middleware configuration
             noInfo: true,
         },
-        port: 9876,
-        colors: true,
         logLevel: config.LOG_INFO,
+        colors: true,
+        action: 'run',
         autoWatch: true,
-        browsers: ['ChromeWithoutSecurity'],
-        customLaunchers: {
-            ChromeWithoutSecurity: {
-                base: 'Chrome',
-                flags: ['--disable-web-security'],
-            },
-        },
+        browsers: ['Chrome'],
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
         singleRun: false,
         concurrency: Infinity,
-        // plugins: [
-        //     karmaWebpack,
-        //     karmaMocha,
-        //     karmaChromeLauncher,
-        // ],
     });
 };

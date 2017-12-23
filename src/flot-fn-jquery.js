@@ -18,7 +18,17 @@ function setStyle(element, styles) {
     $(element).css(styles);
 }
 
+/**
+ * abstraction from jQuery appendTo Fn
+ * @param {element} root Element of DOM
+ * @param {element} element Element of DOM
+ */
+function appendTo(root, element) {
+    $(element).appendTo(root);
+}
+
 export {
     getChildren,
     setStyle,
+    appendTo,
 };

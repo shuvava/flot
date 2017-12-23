@@ -1,6 +1,6 @@
-/* globals describe it */
-const { assert } = require('chai');
-const $ = require('../bak/jquery');
+/* globals describe it assert */
+// import { assert } from 'chai';
+import $ from 'jquery';
 
 describe('jQuery', () => {
     describe('#getDocumentRoot()', () => {

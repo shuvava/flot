@@ -25,10 +25,20 @@ function setStyle(element, styles) {
     }
 }
 
+/**
+ * vanilla implementation of jQuery appendTo Fn
+ * @param {element} root Element of DOM
+ * @param {element} element Element of DOM
+ */
+function appendTo(root, element) {
+    root.appendChild(element);
+}
+
 function noop() {}
 
 export {
     getChildren,
     setStyle,
+    appendTo,
     noop,
 };

@@ -1,9 +1,12 @@
+const path = require('path');
+
 const config = Object.freeze({
     dir: '/dist',
     web: '/dist',
     release: false,
     analytics: false,
     test: false,
+    karma: false,
     clean: true,
     umd: false,
     globals: {
@@ -38,6 +41,9 @@ module.exports = (env) => {
     if (env.test == null) {
         env.test = config.test;
     }
+    if (env.karma == null) {
+        env.karma = config.karma;
+    }
     if (env.clean == null) {
         env.clean = config.clean;
     }
@@ -51,5 +57,9 @@ module.exports = (env) => {
         env.globals.jquery = config.globals.jquery;
     }
     env.babel = config.babel;
+
+    env.rootPath = path.join(__dirname, '../');
+    env.dir = path.join(env.rootPath, env.dir);
+
     return env;
 };
