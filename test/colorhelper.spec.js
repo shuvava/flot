@@ -9,7 +9,9 @@ describe('ColorHelper', () => {
     });
     describe('#Add()', () => {
         it('should add 1 to g', () => {
-            const t = new ColorHelper(1, 1, 1, 1);
+            const t = new ColorHelper({
+                r: 1, g: 1, b: 1, a: 1,
+            });
             t.add('bg', 1);
             assert.equal(t.g, 2);
         });
