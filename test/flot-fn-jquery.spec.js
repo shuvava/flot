@@ -1,6 +1,11 @@
-/* globals describe it assert */
+/* globals describe it assert expect */
 import $ from 'jquery';
-import { appendTo, setStyle, getChildren, detach, addClass, insertAfter, clone, extend, offset, data, removeData } from '../src/flot-fn-jquery';
+import {
+    appendTo, setStyle, getChildren,
+    detach, addClass, insertAfter, clone,
+    extend, offset, data, removeData, empty,
+    html, remove,
+} from '../src/flot-fn-jquery';
 
 const _module_ = 'flot-fn-jquery';
 
@@ -115,7 +120,7 @@ describe('flot-fn-jquery', () => {
             appendTo(body, elm);
             const _offset = offset(elm);
             const _offsetBody = offset(body);
-            assert.deepEqual(_offset, _offsetBody);
+            assert.deepEqual(_offset.left, _offsetBody.left);
         });
     });
     describe('#data()', () => {
@@ -144,6 +149,52 @@ describe('flot-fn-jquery', () => {
             removeData(elm, propID);
             prop = data(elm, propID);
             assert.isUndefined(prop);
+        });
+    });
+    describe('#empty()', () => {
+        const id = `${_module_}-empty`;
+        const body = $('body');
+        const elm = $(`<div id="${id}">test</div>`);
+        appendTo(body, elm);
+        it('should be not empty', () => {
+            const text = elm.text();
+            expect(text).to.not.be.empty; // eslint-disable-line no-unused-expressions
+        });
+        it('should be empty', () => {
+            empty(elm);
+            const text = elm.text();
+            expect(text).to.be.empty; // eslint-disable-line no-unused-expressions
+        });
+    });
+    describe('#html', () => {
+        const id = `${_module_}-html`;
+        const body = $('body');
+        const elm = $(`<div id="${id}"></div>`);
+        appendTo(body, elm);
+        it('should be empty', () => {
+            const _html = elm.html();
+            expect(_html).to.be.empty; // eslint-disable-line no-unused-expressions
+        });
+        it('should be not empty', () => {
+            html(elm, '<div>test</div>');
+            const _html = elm.html();
+            expect(_html).to.not.be.empty; // eslint-disable-line no-unused-expressions
+        });
+    });
+    describe('#remove', () => {
+        const id = `${_module_}-remove`;
+        const body = $('body');
+        const testClass = 'test';
+        const elm = $(`<div id="${id}"><div class="${testClass}">vvv</div><div class="${testClass}">xxx</div></div>`);
+        appendTo(body, elm);
+        it('should has children', () => {
+            const cnt = elm.children(`.${testClass}`).length;
+            assert.isTrue(cnt > 0);
+        });
+        it('should has no children', () => {
+            remove(elm, `.${testClass}`);
+            const cnt = elm.children(`.${testClass}`).length;
+            assert.isTrue(cnt === 0);
         });
     });
 });

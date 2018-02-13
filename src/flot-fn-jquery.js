@@ -118,6 +118,24 @@ function empty(element) {
     $(element).empty();
 }
 
+/**
+ * abstraction from jQuery html Fn
+ * @param {element} element Existing element of DOM
+ * @param {String} htmlStr HTML code
+ */
+function html(element, htmlStr) {
+    $(element).html(htmlStr);
+}
+
+/**
+ * abstraction from jQuery html Fn
+* @param {element} element Existing element of DOM
+* @param {String} selector List of classes to apply to lookup
+*/
+function remove(element, selector) {
+    $(element).find(selector).remove();
+}
+
 export {
     getChildren,
     getStyle,
@@ -132,4 +150,6 @@ export {
     data,
     removeData,
     empty,
+    html,
+    remove,
 };

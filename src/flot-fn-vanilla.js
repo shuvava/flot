@@ -6,7 +6,7 @@ import { hasOwnProperty } from './flot-fn';
 /**
  * vanilla implementation of jQuery children Fn
  * @param {element} element start point to search
- * @param {string} selector List of classes to apply to lookup
+ * @param {String} selector List of classes to apply to lookup
  */
 function getChildren(element, selector) {
     return element.querySelectorAll(selector);
@@ -213,6 +213,29 @@ function empty(element) {
     }
 }
 
+/**
+ * vanilla implementation of jQuery html Fn
+ * @param {element} element Existing element of DOM
+ * @param {String} htmlStr HTML code
+ */
+function html(element, htmlStr) {
+    element.innerHTML = htmlStr;
+}
+
+/**
+ * vanilla implementation of jQuery remove Fn
+ * IE not supported
+ * @param {element} element Existing element of DOM
+ * @param {String} selector List of classes to apply to lookup
+ */
+function remove(element, selector) {
+    const nodes = element.querySelectorAll(selector);
+    for (let i = 0; i < nodes.length; i += 1) {
+        const node = nodes[i];
+        node.remove();
+    }
+}
+
 function noop() {}
 
 export {
@@ -231,4 +254,6 @@ export {
     data,
     removeData,
     empty,
+    html,
+    remove,
 };

@@ -73,7 +73,7 @@ const options = Object.freeze({
             zero: true,
         },
         shadowSize: 3,
-        highlightColor: null,
+        highlightColor: null, // by default is 0.5 alfa from color property
     },
     grid: {
         show: true,
@@ -122,6 +122,7 @@ const hooks = Object.freeze({
     drawSeries: [],
     draw: [],
     bindEvents: [],
+    // call on canvas redraw(ie highlight)
     drawOverlay: [],
     shutdown: [],
 });

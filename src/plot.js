@@ -1,6 +1,6 @@
 import { hasOwnProperty } from './flot-fn';
 import { noop } from './flot-fn-vanilla';
-import { getChildren, getStyle, setStyle, appendTo, detach, addClass, insertAfter, clone, extend, offset, removeData, empty } from './flot-fn-jquery';
+import { getChildren, getStyle, setStyle, appendTo, detach, addClass, insertAfter, clone, extend, offset, removeData, empty, html } from './flot-fn-jquery';
 
 import ColorHelper from './colorhelper';
 import Canvas from './canvas';
@@ -31,6 +31,17 @@ function updateAxis(axis, min, max) {
     }
 }
 
+function getBarLeftAlign(series) {
+    switch (series.bars.align) {
+        case 'left':
+            return 0;
+        case 'right':
+            return -series.bars.barWidth;
+        default:// center
+            return -series.bars.barWidth / 2;
+    }
+}
+
 
 /**
  * The top-level container for the entire plot.
@@ -51,6 +62,10 @@ export default class Plot {
         this.plotWidth = 0;
         this.plotHeight = 0;
         this.hooks = extend(true, {}, defHooks);
+
+        // interactive features
+        this.highlights = [];
+        this.redrawTimeout = null;
 
         // aliases:
         this.c2p = this.canvasToAxisCoords;
@@ -553,11 +568,321 @@ export default class Plot {
             }
         }
     }
+//#region draw
     highlight(s, point, auto) {
-
+        if (typeof s === 'number') {
+            s = this.series[s]; // eslint-disable-line prefer-destructuring
+        }
+        if (typeof point === 'number') {
+            const ps = s.datapoints.pointsize;
+            point = s.datapoints.points.slice(ps * point, ps * (point + 1));
+        }
+        const i = this.indexOfHighlight(s, point);
+        if (i === -1) {
+            this.highlights.push({ series: s, point: point, auto: auto });
+            this.triggerRedrawOverlay();
+        } else if (!auto) {
+            this.highlights[i].auto = false;
+        }
     }
-    unhighlight(s, point) {}
-    triggerRedrawOverlay() {}
+    unhighlight(s, point) {
+        if (s == null && point == null) {
+            this.highlights = [];
+            this.triggerRedrawOverlay();
+            return;
+        }
+
+        if (typeof s === 'number') {
+            s = this.series[s];
+        }
+
+        if (typeof point === 'number') {
+            const ps = s.datapoints.pointsize;
+            point = s.datapoints.points.slice(ps * point, ps * (point + 1));
+        }
+
+        const i = this.indexOfHighlight(s, point);
+        if (i !== -1) {
+            this.highlights.splice(i, 1);
+            this.triggerRedrawOverlay();
+        }
+    }
+    indexOfHighlight(s, point) {
+        for (let i = 0; i < this.highlights.length; i += 1) {
+            const h = this.highlights[i];
+            if (h.series === s && h.point[0] === point[0] && h.point[1] === point[1]) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    drawOverlay() {
+        if (this.redrawTimeout) {
+            window.clearTimeout(this.redrawTimeout);
+            this.redrawTimeout = null;
+        }
+        // draw highlights
+        this.octx.save();
+        this.overlay.clear();
+        this.octx.translate(this.plotOffset.left, this.plotOffset.top);
+        for (let i = 0; i < this.highlights.length; i += 1) {
+            const hi = this.highlights[i];
+            if (hi.series.bars.show) {
+                this.drawBarHighlight(hi.series, hi.point);
+            } else {
+                this.drawPointHighlight(hi.series, hi.point);
+            }
+        }
+        this.octx.restore();
+        this.executeHooks(this.hooks.drawOverlay, [this.octx]);
+    }
+    triggerRedrawOverlay() {
+        const timeOut = this.options.interaction.redrawOverlayInterval;
+        if (timeOut === -1) { // skip event queue
+            this.drawOverlay();
+            return;
+        }
+        if (!this.redrawTimeout) {
+            this.redrawTimeout = window.setTimeout(this.drawOverlay, timeOut);
+        }
+    }
+    /**
+     * draw highlight contour
+     * @param {*} series
+     * @param {Array.<Number>} point chart point to highlight
+     */
+    drawPointHighlight(series, point) {
+        let x = point[0];
+        let y = point[1];
+        const { xaxis: axisx, yaxis: axisy } = series;
+        const highlightColor = (typeof series.highlightColor === 'string')
+            ? series.highlightColor
+            : (new ColorHelper(series.color)).scale('a', 0.5).toString();
+        if (x < axisx.min || x > axisx.max || y < axisy.min || y > axisy.max) {
+            return;
+        }
+        const pointRadius = series.points.radius + series.points.lineWidth / 2;
+        const radius = 1.5 * pointRadius;
+        this.octx.lineWidth = pointRadius;
+        this.octx.strokeStyle = highlightColor;
+        x = axisx.p2c(x);
+        y = axisy.p2c(y);
+
+        this.octx.beginPath();
+        if (series.points.symbol === 'circle') {
+            this.octx.arc(x, y, radius, 0, 2 * Math.PI, false);
+        } else {
+            series.points.symbol(this.octx, x, y, radius, false);
+        }
+        this.octx.closePath();
+        this.octx.stroke();
+    }
+    drawBarHighlight(series, point) {
+        const highlightColor = (typeof series.highlightColor === 'string')
+            ? series.highlightColor
+            : (new ColorHelper(series.color)).scale('a', 0.5).toString();
+        const barLeft = getBarLeftAlign(series);
+        this.octx.lineWidth = series.bars.lineWidth;
+        this.strokeStyle = highlightColor;
+        this.drawBar(
+            point[0], point[1], point[2] || 0,
+            barLeft, barLeft + series.bars.barWidth,
+            () => highlightColor, series.xaxis, series.yaxis,
+            this.octx, series.bars.horizontal, series.bars.lineWidth,
+        );
+    }
+    getColorOrGradient(spec, bottom, top, defaultColor) {
+        if (typeof spec === 'string') {
+            return spec;
+        }
+        // assume this is a gradient spec; IE currently only
+        // supports a simple vertical gradient properly, so that's
+        // what we support too
+        const gradient = this.ctx.createLinearGradient(0, top, 0, bottom);
+        const len = spec.colors.length;
+        for (let i = 0; i < len; i += 1) {
+            let c = spec.colors[i];
+            if (typeof c !== 'string') {
+                let co = new ColorHelper(defaultColor);
+                if (c.brightness != null) {
+                    co = co.scale('rgb', c.brightness);
+                }
+                if (c.opacity != null) {
+                    co.a *= c.opacity;
+                }
+                c = co.toString();
+            }
+            gradient.addColorStop(i / (len - 1), c);
+        }
+        return gradient;
+    }
+    insertLegend() {
+        if (this.options.legend.container != null) {
+            html(this.options.legend.container, '');
+        }
+    }
+//#endregion
+    // #region interactive features
+    onMouseMove(e) {
+        if (this.options.grid.hoverable) {
+            this.triggerClickHoverEvent(
+                'plothover', e,
+                s => s.hoverable !== false,
+            );
+        }
+    }
+    onMouseLeave(e) {
+        this.triggerClickHoverEvent(
+            'plothover', e,
+            () => false,
+        );
+    }
+    onClick(e) {
+        this.triggerClickHoverEvent(
+            'plotclick', e,
+            s => s.clickable !== false,
+        );
+    }
+    /**
+     * returns the data item the mouse is over, or null if none is found
+     * @param {Number} mouseX X canvas coordinate
+     * @param {Number} mouseY Y canvas coordinate
+     * @param {Function} seriesFilter
+     */
+    findNearbyItem(mouseX, mouseY, seriesFilter) {
+        const maxDistance = this.options.grid.mouseActiveRadius;
+        let smallestDistance = maxDistance * maxDistance + 1;
+        let item;
+        for (let i = this.series.length - 1; i >= 0; i -= 1) {
+            if (!seriesFilter(this.series[i])) {
+                continue;
+            }
+            const s = this.series[i];
+            const { xaxis: axisx, yaxis: axisy } = s;
+            const { points, pointsize: ps } = s.datapoints;
+            // precompute some stuff to make the loop faster
+            const mx = axisx.c2p(mouseX);
+            const my = axisy.c2p(mouseY);
+            let maxx = maxDistance / axisx.scale;
+            let maxy = maxDistance / axisy.scale;
+            // with inverse transforms, we can't use the maxx/maxy
+            // optimization, sadly
+            if (axisx.options.inverseTransform) {
+                maxx = Number.MAX_VALUE;
+            }
+            if (axisy.options.inverseTransform) {
+                maxy = Number.MAX_VALUE;
+            }
+
+            if (s.lines.show || s.points.show) {
+                for (let j = 0; j < points.length; j += ps) {
+                    const x = points[j];
+                    const y = points[j + 1];
+                    if (x == null) {
+                        continue;
+                    }
+                    // For points and lines, the cursor must be within a
+                    // certain distance to the data point
+                    if (x - mx > maxx || x - mx < -maxx ||
+                       y - my > maxy || y - my < -maxy) {
+                        continue;
+                    }
+
+                    // We have to calculate distances in pixels, not in
+                    // data units, because the scales of the axes may be different
+                    const dx = Math.abs(axisx.p2c(x) - mouseX);
+                    const dy = Math.abs(axisy.p2c(y) - mouseY);
+                    const dist = dx * dx + dy * dy; // we save the sqrt
+
+                    // use <= to ensure last point takes precedence
+                    // (last generally means on top of)
+                    if (dist < smallestDistance) {
+                        smallestDistance = dist;
+                        item = [i, j / ps];
+                    }
+                }
+            }
+            if (s.bars.show && !item) { // no other point can be nearby
+                const barLeft = getBarLeftAlign(s);
+                const barRight = barLeft + s.bars.barWidth;
+                for (let j = 0; j < points.length; j += ps) {
+                    const x = points[j];
+                    const y = points[j + 1];
+                    const b = points[j + 2];
+                    if (x == null) {
+                        continue;
+                    }
+
+                    // for a bar graph, the cursor must be inside the bar
+                    if (this.series[i].bars.horizontal
+                        ? (mx <= Math.max(b, x)
+                           && mx >= Math.min(b, x)
+                           && my >= y + barLeft
+                           && my <= y + barRight)
+                        : (mx >= x + barLeft
+                           && mx <= x + barRight
+                           && my >= Math.min(b, y)
+                           && my <= Math.max(b, y))
+                    ) {
+                        item = [i, j / ps];
+                    }
+                }
+            }
+        }
+        if (item) {
+            const i = item[0];
+            const j = item[1];
+            const { pointsize: ps } = this.series[i].datapoints;
+            return {
+                datapoint: this.series[i].datapoints.points.slice(j * ps, (j + 1) * ps),
+                dataIndex: j,
+                series: this.series[i],
+                seriesIndex: i,
+            };
+        }
+        return null;
+    }
+    /**
+     * trigger click or hover event (they send the same parameters so we share their code)
+     * @param {String} eventname Name of event {click|hover}
+     * @param {*} event native event
+     * @param {Function} seriesFilter
+     */
+    triggerClickHoverEvent(eventname, event, seriesFilter) {
+        const _offset = this.eventHolder.offset();
+        const canvasX = event.pageX - _offset.left - this.plotOffset.left;
+        const canvasY = event.pageY - _offset.top - this.plotOffset.top;
+        const pos = this.canvasToAxisCoords({ left: canvasX, top: canvasY });
+
+        pos.pageX = event.pageX;
+        pos.pageY = event.pageY;
+        const item = this.findNearbyItem(canvasX, canvasY, seriesFilter);
+        if (item) {
+            // fill in mouse pos for any listeners out there
+            item.pageX = parseInt(item.series.xaxis.p2c(item.datapoint[0]) + _offset.left + this.plotOffset.left, 10);
+            item.pageY = parseInt(item.series.yaxis.p2c(item.datapoint[1]) + _offset.top + this.plotOffset.top, 10);
+        }
+
+        if (this.options.grid.autoHighlight) {
+            // clear auto-highlights
+            for (let i = 0; i < this.highlights.length; i += 1) {
+                const h = this.highlights[i];
+                if (h.auto === eventname &&
+                   !(item && h.series === item.series &&
+                   h.point[0] === item.datapoint[0] &&
+                   h.point[1] === item.datapoint[1])) {
+                    this.unhighlight(h.series, h.point);
+                }
+            }
+
+            if (item) {
+                this.highlight(item.series, item.datapoint, eventname);
+            }
+        }
+
+        this.placeholder.trigger(eventname, [pos, item]);
+    }
+    // #endregion
     executeHooks(hook, args) {
         const _args = [this].concat(args);
         for (let i = 0; i < hook.length; i += 1) {

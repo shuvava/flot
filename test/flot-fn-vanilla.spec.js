@@ -1,5 +1,10 @@
-/* globals describe it assert */
-import { appendTo, setStyle, getChildren, detach, addClass, insertAfter, clone, extend, offset, data, removeData } from '../src/flot-fn-vanilla';
+/* globals describe it assert expect */
+import {
+    appendTo, setStyle, getChildren,
+    detach, addClass, insertAfter, clone,
+    extend, offset, data, removeData,
+    empty, html, remove,
+} from '../src/flot-fn-vanilla';
 
 
 const _module_ = 'flot-fn-vanilla';
@@ -158,7 +163,7 @@ describe(_module_, () => {
             appendTo(body, elm);
             const _offset = offset(elm);
             const _offsetBody = offset(body);
-            assert.deepEqual(_offset, _offsetBody);
+            assert.deepEqual(_offset.left, _offsetBody.left);
         });
     });
 
@@ -191,6 +196,57 @@ describe(_module_, () => {
             removeData(elm, propID);
             prop = data(elm, propID);
             assert.isUndefined(prop);
+        });
+    });
+    describe('#empty()', () => {
+        const id = `${_module_}-empty`;
+        const body = document.getElementsByTagName('body')[0];
+        const elm = document.createElement('div');
+        elm.setAttribute('id', id);
+        elm.innerText = 'test';
+        appendTo(body, elm);
+        it('should be not empty', () => {
+            const text = elm.innerText;
+            expect(text).to.not.be.empty; // eslint-disable-line no-unused-expressions
+        });
+        it('should be empty', () => {
+            empty(elm);
+            const text = elm.innerText;
+            expect(text).to.be.empty; // eslint-disable-line no-unused-expressions
+        });
+    });
+    describe('#html', () => {
+        const id = `${_module_}-html`;
+        const body = document.getElementsByTagName('body')[0];
+        const elm = document.createElement('div');
+        elm.setAttribute('id', id);
+        appendTo(body, elm);
+        it('should be empty', () => {
+            const _html = elm.innerHTML;
+            expect(_html).to.be.empty; // eslint-disable-line no-unused-expressions
+        });
+        it('should be not empty', () => {
+            html(elm, '<div>test</div>');
+            const _html = elm.innerHTML;
+            expect(_html).to.not.be.empty; // eslint-disable-line no-unused-expressions
+        });
+    });
+    describe('#remove', () => {
+        const id = `${_module_}-remove`;
+        const body = document.getElementsByTagName('body')[0];
+        const testClass = 'test-remove-css';
+        const elm = document.createElement('div');
+        elm.setAttribute('id', id);
+        elm.innerHTML = `<div class="${testClass}">vvv</div><div class="${testClass}">xxx</div>`;
+        appendTo(body, elm);
+        it('should has children', () => {
+            const cnt = getChildren(elm, `.${testClass}`).length;
+            assert.isTrue(cnt > 0);
+        });
+        it('should has no children', () => {
+            remove(elm, `.${testClass}`);
+            const cnt = getChildren(elm, `.${testClass}`).length;
+            assert.isTrue(cnt === 0);
         });
     });
 });

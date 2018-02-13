@@ -35,7 +35,7 @@ module.exports = {
         "operator-assignment": "off",
 
         // vetted on by the team (30 Aug 2016)
-        "no-continue": "off"
+        "no-continue": "off",
    },
     "env": {
         'browser': true,
