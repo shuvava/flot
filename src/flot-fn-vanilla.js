@@ -9,6 +9,9 @@ import { hasOwnProperty } from './flot-fn';
  * @param {String} selector List of classes to apply to lookup
  */
 function getChildren(element, selector) {
+    if (!selector || selector === '') {
+        return element.childNodes;
+    }
     return element.querySelectorAll(selector);
 }
 
@@ -35,12 +38,44 @@ function getStyle(element, style) {
 }
 
 /**
+ * @param {String} HTML representing a single element
+ * @return {Element}
+ */
+function htmlToElement(htmlStr) {
+    const template = document.createElement('template');
+    htmlStr = htmlStr.trim(); // Never return a text node of whitespace as the result
+    template.innerHTML = htmlStr;
+    return template.content.firstChild;
+}
+
+/**
  * vanilla implementation of jQuery appendTo Fn
  * @param {element} root Element of DOM
  * @param {element} element Element of DOM
  */
 function appendTo(root, element) {
+    if (typeof element === 'string') {
+        element = htmlToElement(element);
+    }
     root.appendChild(element);
+    return element;
+}
+
+/**
+ * vanilla implementation of jQuery prependTo Fn
+ * @param {element} root Element of DOM
+ * @param {element} element Element of DOM
+ */
+function prependTo(root, element) {
+    if (typeof element === 'string') {
+        element = htmlToElement(element);
+    }
+    let _fistChild = null;
+    if (root.childNodes.length > 0) {
+        _fistChild = root.childNodes[0]; // eslint-disable-line prefer-destructuring
+    }
+    root.insertBefore(element, _fistChild);
+    return _fistChild;
 }
 
 /**
@@ -85,6 +120,15 @@ function removeClass(element, classes) {
             element.classList.remove(cssList[i]);
         }
     }
+}
+
+/**
+ * vanilla implementation of jQuery hasClass Fn
+ * @param {element} element Element of DOM
+ * @param {string} class List CSS classes
+ */
+function hasClass(element, cssClass) {
+    return element.classList.contains(cssClass);
 }
 
 /**
@@ -236,6 +280,44 @@ function remove(element, selector) {
     }
 }
 
+/**
+ * extract value of specific style color property from element go up by DOM
+ * @param {element} element Existing element of DOM
+ * @param {String} css name of style property
+ */
+function extractColor(element, css) {
+    let _element = element;
+    let style;
+    do {
+        style = _element.style[css];
+        if (style && style !== '' && style !== 'transparent') {
+            return style.toLowerCase();
+        }
+        _element = _element.parentNode;
+    } while (_element && _element.tagName !== 'body');
+    // catch Safari's way of signalling transparent
+    if (style && style === 'rgba(0, 0, 0, 0)') {
+        return 'transparent';
+    }
+    return 'transparent';
+}
+
+/**
+ * vanilla implementation of jQuery width Fn
+ * @param {element} element Existing element of DOM
+ */
+function getWidth(element) {
+    return parseInt(window.getComputedStyle(element).width, 10);
+}
+
+/**
+ * vanilla implementation of jQuery height Fn
+ * @param {element} element Existing element of DOM
+ */
+function getHeight(element) {
+    return parseInt(window.getComputedStyle(element).height, 10);
+}
+
 function noop() {}
 
 export {
@@ -243,10 +325,12 @@ export {
     getStyle,
     setStyle,
     appendTo,
+    prependTo,
     noop,
     detach,
     addClass,
     removeClass,
+    hasClass,
     insertAfter,
     clone,
     extend,
@@ -256,4 +340,7 @@ export {
     empty,
     html,
     remove,
+    extractColor,
+    getWidth,
+    getHeight,
 };

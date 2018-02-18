@@ -1,6 +1,33 @@
 import { hasOwnProperty } from './flot-fn';
 import { noop } from './flot-fn-vanilla';
-import { getChildren, getStyle, setStyle, appendTo, detach, addClass, insertAfter, clone, extend, offset, removeData, empty, html } from './flot-fn-jquery';
+import {
+    getChildren, getStyle, setStyle,
+    hasClass,
+    appendTo, prependTo,
+    extend, offset,
+    data, removeData, empty,
+    html, remove, extractColor,
+    getWidth, getHeight,
+} from './flot-fn-jquery';
+
+import {
+    axisNumber,
+    updateAxis,
+    getBarLeftAlign,
+    plotPoints,
+    plotLine,
+    plotLineArea,
+    getColorOrGradient,
+    getFillStyle,
+    setRange,
+    extractRange,
+    measureTickLabels,
+    snapRangeToTicks,
+    setTicks,
+    tickGenerator,
+    tickGeneratorScaled,
+    tickFormatter,
+} from './plot-fn';
 
 import ColorHelper from './colorhelper';
 import Canvas from './canvas';
@@ -11,37 +38,6 @@ import { options as defOptions, plotOffset as defPlotOffset, hooks as defHooks }
 noop();
 
 const _plot_ = 'plot';
-
-function axisNumber(obj, coord) {
-    let axis = obj[`${coord}axis`];
-    if (typeof axis === 'object') { // if we got a real axis, extract number
-        axis = axis.n;
-    }
-    if (typeof axis !== 'number') { // default to first axis
-        axis = 1;
-    }
-    return axis;
-}
-function updateAxis(axis, min, max) {
-    if (min < axis.datamin && min !== -Number.MAX_VALUE) {
-        axis.datamin = min;
-    }
-    if (max > axis.datamax && max !== Number.MAX_VALUE) {
-        axis.datamax = max;
-    }
-}
-
-function getBarLeftAlign(series) {
-    switch (series.bars.align) {
-        case 'left':
-            return 0;
-        case 'right':
-            return -series.bars.barWidth;
-        default:// center
-            return -series.bars.barWidth / 2;
-    }
-}
-
 
 /**
  * The top-level container for the entire plot.
@@ -143,22 +139,22 @@ export default class Plot {
     }
     /**
      * extends array of data by default values
-     * @param {Array.<Object>} data Graph data
+     * @param {Array.<Object>} _data Graph data
      */
-    parseData(data) {
+    parseData(_data) {
         const res = [];
-        for (let i = 0; i < data.length; i += 1) {
+        for (let i = 0; i < _data.length; i += 1) {
             let item = extend(true, {}, this.options.series);
-            if (data[i].data != null) {
+            if (_data[i].data != null) {
                 // move the data instead of deep-copy
-                item.data = data[i].data;
-                delete data[i].data;
+                item.data = _data[i].data;
+                delete _data[i].data;
 
-                item = extend(true, item, data[i]);
+                item = extend(true, item, _data[i]);
 
-                data[i] = item.data;
+                _data[i] = item.data;
             } else {
-                item.data = data[i];
+                item.data = _data[i];
             }
             res.push(item);
         }
@@ -167,30 +163,394 @@ export default class Plot {
     }
     /**
      * Update graph state
-     * @param {Array.<Object>} data Graph data
+     * @param {Array.<Object>} _data Graph data
      */
-    setData(data) {
-        this.parseData(data);
+    setData(_data) {
+        this.parseData(_data);
         this.fillInSeriesOptions();
         this.processData();
     }
-    setupGrid() {
-        const axes = this.allAxes();
-        const { showGrid } = this.options.grid;
+    allocateAxisBoxFirstPhase(axis) {
+        // find the bounding box of the axis by looking at label
+        // widths/heights and ticks, make room by diminishing the
+        // plotOffset; this first phase only looks at one
+        // dimension per axis, the other dimension depends on the
+        // other axes so will have to wait
+        let { labelWidth: lw, labelHeight: lh } = axis;
+        const pos = axis.options.position;
+        const isXAxis = axis.direction === 'x';
+        let tickLength = axis.options.tickLength; // eslint-disable-line prefer-destructuring
+        let axisMargin = this.options.grid.axisMargin;// eslint-disable-line prefer-destructuring
+        let padding = this.options.grid.labelMargin;
+        let innermost = true;
+        let outermost = true;
+        let first = true;
+        let found = false;
 
-        // Initialize the plot's offset from the edge of the canvas
-        for (const prop in this.plotOffset) {
+        // Determine the axis's position in its direction and on its side
+        const _axis = isXAxis ? this.xaxes : this.yaxes;
+        for (let i = 0; _axis.length; i += 1) {
+            const a = _axis[i];
+            if (a && (a.show || a.reserveSpace)) {
+                if (a === axis) {
+                    found = true;
+                } else if (a.options.position === pos) {
+                    if (found) {
+                        outermost = false;
+                    } else {
+                        innermost = false;
+                    }
+                }
+                if (!found) {
+                    first = false;
+                }
+            }
+        }
 
+        // The outermost axis on each side has no margin
+        if (outermost) {
+            axisMargin = 0;
+        }
+
+        // The ticks for the first axis in each direction stretch across
+        if (tickLength == null) {
+            tickLength = first ? 'full' : 5;
+        }
+
+        if (!Number.isNaN(+tickLength)) {
+            padding += +tickLength;
+        }
+
+        if (isXAxis) {
+            lh += padding;
+
+            if (pos === 'bottom') {
+                this.plotOffset.bottom += lh + axisMargin;
+                axis.box = { top: this.surface.height - this.plotOffset.bottom, height: lh };
+            } else {
+                axis.box = { top: this.plotOffset.top + axisMargin, height: lh };
+                this.plotOffset.top += lh + axisMargin;
+            }
+        } else {
+            lw += padding;
+
+            if (pos === 'left') {
+                axis.box = { left: this.plotOffset.left + axisMargin, width: lw };
+                this.plotOffset.left += lw + axisMargin;
+            } else {
+                this.plotOffset.right += lw + axisMargin;
+                axis.box = { left: this.surface.width - this.plotOffset.right, width: lw };
+            }
+        }
+
+        // save for future reference
+        axis.position = pos;
+        axis.tickLength = tickLength;
+        axis.box.padding = padding;
+        axis.innermost = innermost;
+    }
+
+    allocateAxisBoxSecondPhase(axis) {
+        // now that all axis boxes have been placed in one
+        // dimension, we can set the remaining dimension coordinates
+        if (axis.direction === 'x') {
+            axis.box.left = this.plotOffset.left - axis.labelWidth / 2;
+            axis.box.width = this.surface.width - this.plotOffset.left - this.plotOffset.right + axis.labelWidth;
+        } else {
+            axis.box.top = this.plotOffset.top - axis.labelHeight / 2;
+            axis.box.height = this.surface.height - this.plotOffset.bottom - this.plotOffset.top + axis.labelHeight;
         }
     }
+
+    adjustLayoutForThingsStickingOut() {
+        // possibly adjust plot offset to ensure everything stays
+        // inside the canvas and isn't clipped off
+        let minMargin = this.options.grid.minBorderMargin;
+
+        // check stuff from the plot (FIXME: this should just read
+        // a value from the series, otherwise it's impossible to
+        // customize)
+        if (minMargin == null) {
+            minMargin = 0;
+
+            for (let i = 0; i < this.series.length; i += 1) {
+                minMargin = Math.max(minMargin, 2 * (this.series[i].points.radius + this.series[i].points.lineWidth / 2));
+            }
+        }
+
+        const margins = {
+            left: minMargin,
+            right: minMargin,
+            top: minMargin,
+            bottom: minMargin,
+        };
+        // check axis labels, note we don't check the actual
+        // labels but instead use the overall width/height to not
+        // jump as much around with replots
+        const allAxes = this.allAxes();
+        for (let i = 0; i < allAxes.length; i += 1) {
+            const axis = allAxes[i];
+            if (axis.reserveSpace && axis.ticks && axis.ticks.length) {
+                if (axis.direction === 'x') {
+                    margins.left = Math.max(margins.left, axis.labelWidth / 2);
+                    margins.right = Math.max(margins.right, axis.labelWidth / 2);
+                } else {
+                    margins.bottom = Math.max(margins.bottom, axis.labelHeight / 2);
+                    margins.top = Math.max(margins.top, axis.labelHeight / 2);
+                }
+            }
+        }
+
+        this.plotOffset.left = Math.ceil(Math.max(margins.left, this.plotOffset.left));
+        this.plotOffset.right = Math.ceil(Math.max(margins.right, this.plotOffset.right));
+        this.plotOffset.top = Math.ceil(Math.max(margins.top, this.plotOffset.top));
+        this.plotOffset.bottom = Math.ceil(Math.max(margins.bottom, this.plotOffset.bottom));
+    }
+
+    setTransformationHelpers(axis) {
+        // set helper functions on the axis, assumes plot area
+        // has been computed already
+        const identity = x => x;
+        const t = axis.options.transform || identity;
+        const it = axis.options.inverseTransform;
+        let s;
+        let m;
+
+        // precompute how much the axis is scaling a point
+        // in canvas space
+        if (axis.direction === 'x') {
+            axis.scale = this.plotWidth / Math.abs(t(axis.max) - t(axis.min));
+            s = axis.scale;
+            m = Math.min(t(axis.max), t(axis.min));
+        } else {
+            axis.scale = this.plotHeight / Math.abs(t(axis.max) - t(axis.min));
+            s = axis.scale;
+            s = -s;
+            m = Math.max(t(axis.max), t(axis.min));
+        }
+
+        // data point to canvas coordinate
+        if (t === identity) { // slight optimization
+            axis.p2c = p => (p - m) * s;
+        } else {
+            axis.p2c = p => (t(p) - m) * s;
+        }
+
+        // canvas coordinate to data point
+        if (!it) {
+            axis.c2p = c => m + c / s;
+        } else {
+            axis.c2p = c => it(m + c / s);
+        }
+    }
+
+    setupCanvases() {
+        // Make sure the placeholder is clear of everything except canvases
+        // from a previous plot in this container that we'll try to re-use.
+        setStyle(this.placeholder, { padding: 0 });// padding messes up the positioning
+        const elm = getChildren(this.placeholder);
+        for (let i = elm.length - 1; i >= 0; i -= 1) {
+            if (!hasClass(elm[i], 'flot-overlay') && !hasClass(elm[i], 'flot-base')) {
+                elm[i].remove();
+            }
+        }
+
+        if (getStyle(this.placeholder, 'position') === 'static') { // for positioning labels and overlay
+            setStyle(this.placeholder, { position: 'relative' });
+        }
+
+        this.surface = new Canvas('flot-base', this.placeholder);
+        this.overlay = new Canvas('flot-overlay', this.placeholder); // overlay canvas for interactive features
+
+        this.ctx = this.surface.context;
+        this.octx = this.overlay.context;
+
+        // define which element we're listening for events on
+        this.unbindEvents();
+
+        // If we're re-using a plot object, shut down the old one
+        const existing = data(this.placeholder, 'plot');
+        if (existing) {
+            existing.shutdown();
+            this.overlay.clear();
+        }
+
+        data(this.placeholder, 'plot', this);
+    }
+
+    setupGrid() {
+        const axes = this.allAxes();
+        const { show: showGrid } = this.options.grid;
+
+        // Initialize the plot's offset from the edge of the canvas
+        for (const prop in this.plotOffset) { // eslint-disable-line
+            const margin = this.options.grid.margin || 0;
+            this.plotOffset[prop] = typeof margin === 'number' ? margin : margin[prop] || 0;
+        }
+
+        this.executeHooks(this.hooks.processOffset, [this.plotOffset]);
+
+        // If the grid is visible, add its border width to the offset
+        for (const prop in this.plotOffset) { // eslint-disable-line
+            if (typeof (this.options.grid.borderWidth) === 'object') {
+                this.plotOffset[prop] += showGrid ? this.options.grid.borderWidth[prop] : 0;
+            } else {
+                this.plotOffset[prop] += showGrid ? this.options.grid.borderWidth : 0;
+            }
+        }
+
+        for (let i = 0; i < axes.length; i += 1) {
+            const axis = axes[i];
+            const { options: axisOpts } = axis;
+            axis.show = axisOpts.show == null ? axis.used : axisOpts.show;
+            axis.reserveSpace = axisOpts.reserveSpace == null ? axis.show : axisOpts.reserveSpace;
+            setRange(axis);
+        }
+
+        if (showGrid) {
+            const allocatedAxes = axes
+                .filter(axis => axis.show || axis.reserveSpace);
+            for (let i = 0; i < allocatedAxes.length; i += 1) {
+                const axis = allocatedAxes[i];
+                // make the ticks
+                this.setupTickGeneration(axis);
+                setTicks(axis);
+                snapRangeToTicks(axis);
+                measureTickLabels(axis, this.surface);
+            }
+
+            // with all dimensions calculated, we can compute the
+            // axis bounding boxes, start from the outside
+            // (reverse order)
+            for (let i = allocatedAxes.length - 1; i >= 0; i -= 1) {
+                this.allocateAxisBoxFirstPhase(allocatedAxes[i]);
+            }
+
+            // make sure we've got enough space for things that
+            // might stick out
+            this.adjustLayoutForThingsStickingOut();
+            for (let i = 0; i < allocatedAxes.length; i += 1) {
+                this.allocateAxisBoxSecondPhase(allocatedAxes[i]);
+            }
+        }
+
+        this.plotWidth = this.surface.width - this.plotOffset.left - this.plotOffset.right;
+        this.plotHeight = this.surface.height - this.plotOffset.bottom - this.plotOffset.top;
+
+        // now we got the proper plot dimensions, we can compute the scaling
+        for (let i = 0; i < axes.length; i += 1) {
+            this.setTransformationHelpers(axes[i]);
+        }
+
+        if (showGrid) {
+            this.drawAxisLabels();
+        }
+
+        this.insertLegend();
+    }
+    setupTickGeneration(axis) {
+        const { options: opts } = axis;
+        // estimate number of ticks
+        let noTicks;
+        if (typeof opts.ticks === 'number' && opts.ticks > 0) {
+            noTicks = opts.ticks;
+        } else {
+            // heuristic based on the model a*sqrt(x) fitted to
+            // some data points that seemed reasonable
+            noTicks = 0.3 * Math.sqrt(axis.direction === 'x' ? this.surface.width : this.surface.height);
+        }
+        const delta = (axis.max - axis.min) / noTicks;
+        const maxDec = opts.tickDecimals;
+        let dec = -Math.floor(Math.log(delta) / Math.LN10);
+
+        if (maxDec != null && dec > maxDec) {
+            dec = maxDec;
+        }
+
+        const magn = Math.pow(10, -dec); // eslint-disable-line no-restricted-properties
+        const norm = delta / magn; // norm is between 1.0 and 10.0
+        let size;
+
+        if (norm < 1.5) {
+            size = 1;
+        } else if (norm < 3) {
+            size = 2;
+            // special case for 2.5, requires an extra decimal
+            if (norm > 2.25 && (maxDec == null || dec + 1 <= maxDec)) {
+                size = 2.5;
+                dec += 1;
+            }
+        } else if (norm < 7.5) {
+            size = 5;
+        } else {
+            size = 10;
+        }
+
+        size *= magn;
+
+        if (opts.minTickSize != null && size < opts.minTickSize) {
+            size = opts.minTickSize;
+        }
+
+        axis.delta = delta;
+        axis.tickDecimals = Math.max(0, maxDec != null ? maxDec : dec);
+        axis.tickSize = opts.tickSize || size;
+
+        // Time mode was moved to a plug-in in 0.8, and since so many people use it
+        // we'll add an especially friendly reminder to make sure they included it.
+        if (opts.mode === 'time' && !axis.tickGenerator) {
+            throw new Error('Time mode requires the flot.time plugin.');
+        }
+
+        // Flot supports base-10 axes; any other mode else is handled by a plug-in,
+        // like flot.time.js.
+        if (!axis.tickGenerator) {
+            axis.tickGenerator = tickGenerator;
+            axis.tickFormatter = tickFormatter;
+        }
+
+        if (typeof opts.tickFormatter === 'function') {
+            axis.tickFormatter = (v, _axis) => opts.tickFormatter(v, _axis).toString();
+        }
+
+        if (opts.alignTicksWithAxis != null) {
+            const otherAxis = (axis.direction === 'x' ? this.xaxes : this.yaxes)[opts.alignTicksWithAxis - 1];
+            if (otherAxis && otherAxis.used && otherAxis !== axis) {
+                // consider snapping min/max to outermost nice ticks
+                const niceTicks = axis.tickGenerator(axis);
+                if (niceTicks.length > 0) {
+                    if (opts.min == null) {
+                        axis.min = Math.min(axis.min, niceTicks[0]);
+                    }
+                    if (opts.max == null && niceTicks.length > 1) {
+                        axis.max = Math.max(axis.max, niceTicks[niceTicks.length - 1]);
+                    }
+                }
+
+                axis.tickGenerator = tickGeneratorScaled.bind(null, otherAxis);
+
+                // we might need an extra decimal since forced
+                // ticks don't necessarily fit naturally
+                if (!axis.mode && opts.tickDecimals == null) {
+                    const extraDec = Math.max(0, -Math.floor(Math.log(axis.delta) / Math.LN10) + 1);
+                    const ts = axis.tickGenerator(axis);
+
+                    // only proceed if the tick interval rounded
+                    // with an extra decimal doesn't give us a
+                    // zero at end
+                    if (!(ts.length > 1 && /\..*0$/.test((ts[1] - ts[0]).toFixed(extraDec)))) {
+                        axis.tickDecimals = extraDec;
+                    }
+                }
+            }
+        }
+    }
+
     resize() {
         const width = this.placeholder.width();
         const height = this.placeholder.height();
         this.surface.resize(width, height);
         this.overlay.resize(width, height);
-    }
-    draw() {
-
     }
     canvasToAxisCoords(pos) {
         // return an object with x/y corresponding to all used axes
@@ -568,7 +928,50 @@ export default class Plot {
             }
         }
     }
-//#region draw
+    // #region draw
+    draw() {
+        this.surface.clear();
+        this.executeHooks(this.hooks.drawBackground, [this.ctx]);
+
+        const { grid } = this.options;
+        // draw background, if any
+        if (grid.show && grid.backgroundColor) {
+            this.drawBackground();
+        }
+
+        if (grid.show && !grid.aboveData) {
+            this.drawGrid();
+        }
+
+        for (let i = 0; i < this.series.length; i += 1) {
+            this.executeHooks(this.hooks.drawSeries, [this.ctx, this.series[i]]);
+            this.drawSeries(this.series[i]);
+        }
+
+        this.executeHooks(this.hooks.draw, [this.ctx]);
+
+        if (grid.show && grid.aboveData) {
+            this.drawGrid();
+        }
+
+        this.surface.render();
+
+        // A draw implies that either the axes or data have changed, so we
+        // should probably update the overlay highlights as well.
+
+        this.triggerRedrawOverlay();
+    }
+    drawSeries(series) {
+        if (series.lines.show) {
+            this.drawSeriesLines(series);
+        }
+        if (series.bars.show) {
+            this.drawSeriesBars(series);
+        }
+        if (series.points.show) {
+            this.drawSeriesPoints(series);
+        }
+    }
     highlight(s, point, auto) {
         if (typeof s === 'number') {
             s = this.series[s]; // eslint-disable-line prefer-destructuring
@@ -593,7 +996,7 @@ export default class Plot {
         }
 
         if (typeof s === 'number') {
-            s = this.series[s];
+            s = this.series[s]; // eslint-disable-line prefer-destructuring
         }
 
         if (typeof point === 'number') {
@@ -716,12 +1119,549 @@ export default class Plot {
         }
         return gradient;
     }
+    drawSeriesPoints(series) {
+        this.ctx.save();
+        this.ctx.translate(this.plotOffset.left, this.plotOffset.top);
+
+        let { lineWidth: lw } = series.points;
+        const { radius, symbol } = series.points;
+        const sw = series.shadowSize;
+
+        // If the user sets the line width to 0, we change it to a very
+        // small value. A line width of 0 seems to force the default of 1.
+        // Doing the conditional here allows the shadow setting to still be
+        // optional even with a lineWidth of 0.
+        if (lw === 0) {
+            lw = 0.0001;
+        }
+        if (lw > 0 && sw > 0) {
+            // draw shadow in two steps
+            const w = sw / 2;
+            this.ctx.lineWidth = w;
+            this.ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            plotPoints(
+                series.datapoints, radius, null, w + w / 2, true,
+                series.xaxis, series.yaxis, symbol, this.ctx,
+            );
+
+            this.ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            plotPoints(
+                series.datapoints, radius, null, w / 2, true,
+                series.xaxis, series.yaxis, symbol, this.ctx,
+            );
+        }
+
+        this.ctx.lineWidth = lw;
+        this.ctx.strokeStyle = series.color;
+        plotPoints(
+            series.datapoints, radius,
+            getFillStyle(series.points, series.color, this.ctx), 0, false,
+            series.xaxis, series.yaxis, symbol, this.ctx,
+        );
+        this.ctx.restore();
+    }
+    drawSeriesLines(series) {
+        this.ctx.save();
+        this.ctx.translate(this.plotOffset.left, this.plotOffset.top);
+        this.ctx.lineJoin = 'round';
+
+        const lw = series.lines.lineWidth;
+        const sw = series.shadowSize;
+        // FIXME: consider another form of shadow when filling is turned on
+        if (lw > 0 && sw > 0) {
+            // draw shadow as a thick and thin line with transparency
+            this.ctx.lineWidth = sw;
+            this.ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            // position shadow at angle from the mid of line
+            const angle = Math.PI / 18;
+            plotLine(
+                series.datapoints,
+                Math.sin(angle) * (lw / 2 + sw / 2),
+                Math.cos(angle) * (lw / 2 + sw / 2),
+                series.xaxis,
+                series.yaxis,
+                this.ctx,
+            );
+            this.ctx.lineWidth = sw / 2;
+            plotLine(
+                series.datapoints,
+                Math.sin(angle) * (lw / 2 + sw / 4),
+                Math.cos(angle) * (lw / 2 + sw / 4),
+                series.xaxis,
+                series.yaxis,
+                this.ctx,
+            );
+        }
+
+        this.ctx.lineWidth = lw;
+        this.ctx.strokeStyle = series.color;
+        const fillStyle = getFillStyle(series.lines, series.color, 0, this.plotHeight);
+        if (fillStyle) {
+            this.ctx.fillStyle = fillStyle;
+            plotLineArea(
+                series.datapoints,
+                series.xaxis,
+                series.yaxis,
+                this.ctx,
+            );
+        }
+
+        if (lw > 0) {
+            plotLine(
+                series.datapoints,
+                0,
+                0,
+                series.xaxis,
+                series.yaxis,
+                this.ctx,
+            );
+        }
+        this.ctx.restore();
+    }
+    drawBackground() {
+        this.ctx.save();
+        this.ctx.translate(this.plotOffset.left, this.plotOffset.top);
+
+        this.ctx.fillStyle = getColorOrGradient(
+            this.options.grid.backgroundColor,
+            this.plotHeight,
+            0,
+            'rgba(255, 255, 255, 0)',
+        );
+        this.ctx.fillRect(0, 0, this.plotWidth, this.plotHeight);
+        this.ctx.restore();
+    }
+    drawGrid() {
+        const allAxes = this.allAxes();
+
+        this.ctx.save();
+        this.ctx.translate(this.plotOffset.left, this.plotOffset.top);
+
+        // draw markings
+        let { markings } = this.options.grid;
+        if (markings) {
+            if (typeof markings === 'function') {
+                const axes = this.plot.getAxes();
+                // xmin etc. is backwards compatibility, to be
+                // removed in the future
+                axes.xmin = axes.xaxis.min;
+                axes.xmax = axes.xaxis.max;
+                axes.ymin = axes.yaxis.min;
+                axes.ymax = axes.yaxis.max;
+
+                markings = markings(axes);
+            }
+
+            for (let i = 0; i < markings.length; i += 1) {
+                const m = markings[i];
+                const xrange = extractRange(m, 'x', allAxes);
+                const yrange = extractRange(m, 'y', allAxes);
+
+                // fill in missing
+                if (xrange.from == null) {
+                    xrange.from = xrange.axis.min;
+                }
+                if (xrange.to == null) {
+                    xrange.to = xrange.axis.max;
+                }
+                if (yrange.from == null) {
+                    yrange.from = yrange.axis.min;
+                }
+                if (yrange.to == null) {
+                    yrange.to = yrange.axis.max;
+                }
+
+                // clip
+                if (
+                    xrange.to < xrange.axis.min ||
+                    xrange.from > xrange.axis.max ||
+                    yrange.to < yrange.axis.min ||
+                    yrange.from > yrange.axis.max
+                ) {
+                    continue;
+                }
+
+                xrange.from = Math.max(xrange.from, xrange.axis.min);
+                xrange.to = Math.min(xrange.to, xrange.axis.max);
+                yrange.from = Math.max(yrange.from, yrange.axis.min);
+                yrange.to = Math.min(yrange.to, yrange.axis.max);
+
+                const xequal = xrange.from === xrange.to;
+                const yequal = yrange.from === yrange.to;
+                if (xequal && yequal) {
+                    continue;
+                }
+
+                // then draw
+                xrange.from = Math.floor(xrange.axis.p2c(xrange.from));
+                xrange.to = Math.floor(xrange.axis.p2c(xrange.to));
+                yrange.from = Math.floor(yrange.axis.p2c(yrange.from));
+                yrange.to = Math.floor(yrange.axis.p2c(yrange.to));
+
+                if (xequal || yequal) {
+                    const lineWidth = m.lineWidth || this.options.grid.markingsLineWidth;
+                    const subPixel = lineWidth % 2 ? 0.5 : 0;
+                    this.ctx.beginPath();
+                    this.ctx.strokeStyle = m.color || this.options.grid.markingsColor;
+                    this.ctx.lineWidth = lineWidth;
+                    if (xequal) {
+                        this.ctx.moveTo(xrange.to + subPixel, yrange.from);
+                        this.ctx.lineTo(xrange.to + subPixel, yrange.to);
+                    } else {
+                        this.ctx.moveTo(xrange.from, yrange.to + subPixel);
+                        this.ctx.lineTo(xrange.to, yrange.to + subPixel);
+                    }
+                    this.ctx.stroke();
+                } else {
+                    this.ctx.fillStyle = m.color || this.options.grid.markingsColor;
+                    this.ctx.fillRect(
+                        xrange.from,
+                        yrange.to,
+                        xrange.to - xrange.from,
+                        yrange.from - yrange.to,
+                    );
+                }
+            }
+        }
+
+        // draw the ticks
+        let bw = this.options.grid.borderWidth;
+        for (let i = 0; i < allAxes.length; i += 1) {
+            const axis = allAxes[i];
+            const { box } = axis;
+            const t = axis.tickLength;
+            let y;
+            let x;
+            let xoff;
+            let yoff;
+            if (!axis.show || axis.ticks.length === 0) {
+                continue;
+            }
+
+            this.ctx.lineWidth = 1;
+
+            // find the edges
+            if (axis.direction === 'x') {
+                x = 0;
+                if (t === 'full') {
+                    y = (axis.position === 'top' ? 0 : this.plotHeight);
+                } else {
+                    y = box.top - this.plotOffset.top + (axis.position === 'top' ? box.height : 0);
+                }
+            } else {
+                y = 0;
+                if (t === 'full') {
+                    x = (axis.position === 'left' ? 0 : this.plotWidth);
+                } else {
+                    x = box.left - this.plotOffset.left + (axis.position === 'left' ? box.width : 0);
+                }
+            }
+
+            // draw tick bar
+            if (!axis.innermost) {
+                this.ctx.strokeStyle = axis.options.color;
+                this.ctx.beginPath();
+
+                xoff = 0;
+                yoff = 0;
+                if (axis.direction === 'x') {
+                    xoff = this.plotWidth + 1;
+                } else {
+                    yoff = this.plotHeight + 1;
+                }
+
+                if (this.ctx.lineWidth === 1) {
+                    if (axis.direction === 'x') {
+                        y = Math.floor(y) + 0.5;
+                    } else {
+                        x = Math.floor(x) + 0.5;
+                    }
+                }
+
+                this.ctx.moveTo(x, y);
+                this.ctx.lineTo(x + xoff, y + yoff);
+                this.ctx.stroke();
+            }
+
+            // draw ticks
+            this.ctx.strokeStyle = axis.options.tickColor;
+            this.ctx.beginPath();
+            for (let j = 0; j < axis.ticks.length; j += 1) {
+                const { v } = axis.ticks[j];
+                xoff = 0;
+                yoff = 0;
+
+                if (
+                    v != null ||
+                    v < axis.min ||
+                    v > axis.max
+                    // skip those lying on the axes if we got a border
+                    || (
+                        t === 'full'
+                        && ((typeof bw === 'object' && bw[axis.position] > 0) || bw > 0)
+                        && (v === axis.min || v === axis.max)
+                    )
+                ) {
+                    continue;
+                }
+
+                if (axis.direction === 'x') {
+                    x = axis.p2c(v);
+                    yoff = (t === 'full' ? -this.plotHeight : t);
+                    if (axis.position === 'top') {
+                        yoff = -yoff;
+                    }
+                } else {
+                    y = axis.p2c(v);
+                    xoff = t === 'full' ? -this.plotWidth : t;
+                    if (axis.position === 'left') {
+                        xoff = -xoff;
+                    }
+                }
+
+                if (this.ctx.lineWidth === 1) {
+                    if (axis.direction === 'x') {
+                        x = Math.floor(x) + 0.5;
+                    } else {
+                        y = Math.floor(y) + 0.5;
+                    }
+                }
+
+                this.ctx.moveTo(x, y);
+                this.ctx.lineTo(x + xoff, y + yoff);
+            }
+
+            this.ctx.stroke();
+        }
+
+        // draw border
+        if (bw) {
+            // If either borderWidth or borderColor is an object, then draw the border
+            // line by line instead of as one rectangle
+            let bc = this.options.grid.borderColor;
+            if (typeof bw === 'object' || typeof bc === 'object') {
+                if (typeof bw !== 'object') {
+                    bw = {
+                        top: bw, right: bw, bottom: bw, left: bw,
+                    };
+                }
+                if (typeof bc !== 'object') {
+                    bc = {
+                        top: bc, right: bc, bottom: bc, left: bc,
+                    };
+                }
+
+                if (bw.top > 0) {
+                    this.ctx.strokeStyle = bc.top;
+                    this.ctx.lineWidth = bw.top;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0 - bw.left, 0 - bw.top / 2);
+                    this.ctx.lineTo(this.plotWidth, 0 - bw.top / 2);
+                    this.ctx.stroke();
+                }
+
+                if (bw.right > 0) {
+                    this.ctx.strokeStyle = bc.right;
+                    this.ctx.lineWidth = bw.right;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.plotWidth + bw.right / 2, 0 - bw.top);
+                    this.ctx.lineTo(this.plotWidth + bw.right / 2, this.plotHeight);
+                    this.ctx.stroke();
+                }
+
+                if (bw.bottom > 0) {
+                    this.ctx.strokeStyle = bc.bottom;
+                    this.ctx.lineWidth = bw.bottom;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.plotWidth + bw.right, this.plotHeight + bw.bottom / 2);
+                    this.ctx.lineTo(0, this.plotHeight + bw.bottom / 2);
+                    this.ctx.stroke();
+                }
+
+                if (bw.left > 0) {
+                    this.ctx.strokeStyle = bc.left;
+                    this.ctx.lineWidth = bw.left;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0 - bw.left / 2, this.plotHeight + bw.bottom);
+                    this.ctx.lineTo(0 - bw.left / 2, 0);
+                    this.ctx.stroke();
+                }
+            } else {
+                this.ctx.lineWidth = bw;
+                this.ctx.strokeStyle = this.options.grid.borderColor;
+                this.ctx.strokeRect(-bw / 2, -bw / 2, this.plotWidth + bw, this.plotHeight + bw);
+            }
+        }
+
+        this.ctx.restore();
+    }
+    drawAxisLabels() {
+        const allAxes = this.allAxes();
+        for (let ix = 0; ix < allAxes.length; ix += 1) {
+            const axis = allAxes[ix];
+            const { box } = axis;
+            const legacyStyles = `${axis.direction}Axis ${axis.direction}${axis.n}Axis`;
+            const layer = `flot-${axis.direction}-axis flot-${axis.direction}${axis.n}-axis ${legacyStyles}`;
+            const font = axis.options.font || 'flot-tick-label tickLabel';
+
+            // Remove text before checking for axis.show and ticks.length;
+            // otherwise plugins, like flot-tickrotor, that draw their own
+            // tick labels will end up with both theirs and the defaults.
+            this.surface.removeText(layer);
+
+            if (!axis.show || axis.ticks.length === 0) {
+                return;
+            }
+
+            for (let i = 0; i < axis.ticks.length; i += 1) {
+                const tick = axis.ticks[i];
+                let x;
+                let y;
+                let valign;
+                let halign;
+                if (!tick.label || tick.v < axis.min || tick.v > axis.max) {
+                    continue;
+                }
+
+                if (axis.direction === 'x') {
+                    halign = 'center';
+                    x = this.plotOffset.left + axis.p2c(tick.v);
+                    if (axis.position === 'bottom') {
+                        y = box.top + box.padding;
+                    } else {
+                        y = box.top + box.height - box.padding;
+                        valign = 'bottom';
+                    }
+                } else {
+                    valign = 'middle';
+                    y = this.plotOffset.top + axis.p2c(tick.v);
+                    if (axis.position === 'left') {
+                        x = box.left + box.width - box.padding;
+                        halign = 'right';
+                    } else {
+                        x = box.left + box.padding;
+                    }
+                }
+
+                this.surface.addText(layer, x, y, tick.label, font, null, null, halign, valign);
+            }
+        }
+    }
+    // TODO: [vs] move it into separate module
     insertLegend() {
         if (this.options.legend.container != null) {
             html(this.options.legend.container, '');
+        } else {
+            remove(this.placeholder, '.legend');
+        }
+        if (!this.options.legend.show) {
+            return;
+        }
+        const fragments = [];
+        const entries = [];
+        let rowStarted = false;
+        const lf = this.options.legend.labelFormatter;
+
+        // Build a list of legend entries, with each having a label and a color
+        for (let i = 0; i < this.series.legend; i += 1) {
+            const s = this.series[i];
+            if (s.label) {
+                const label = lf ? lf(s.label, s) : s.label;
+                if (label) {
+                    entries.push({ label, color: s.color });
+                }
+            }
+        }
+
+        // Sort the legend using either the default or a custom comparator
+        if (this.options.legend.sorted) {
+            if (typeof this.options.legend.sorted === 'function') {
+                entries.sort(this.options.legend.sorted);
+            } else if (this.options.legend.sorted === 'reverse') {
+                entries.reverse();
+            } else {
+                const ascending = this.options.legend.sorted !== 'descending';
+                entries.sort((a, b) => {
+                    if (a.label === b.label) {
+                        return 0;
+                    }
+                    if ((a.label < b.label) !== ascending) {
+                        return 1;
+                    }
+                    return -1;
+                });
+            }
+        }
+
+        // Generate markup for the list of entries, in their final order
+        for (let i = 0; i < entries.length; i += 1) {
+            const entry = entries[i];
+            if (i % this.options.legend.noColumns === 0) {
+                if (rowStarted) {
+                    fragments.push('</tr>');
+                }
+                fragments.push('<tr>');
+                rowStarted = true;
+            }
+
+            fragments.push(`<td class="legendColorBox"><div style="border:1px solid ${this.options.legend.labelBoxBorderColor};padding:1px">` +
+                `<div style="width:4px;height:0;border:5px solid ${entry.color};overflow:hidden"></div></div></td>` +
+                `<td class="legendLabel">${entry.label}</td>`);
+        }
+
+        if (rowStarted) {
+            fragments.push('</tr>');
+        }
+
+        if (fragments.length === 0) {
+            return;
+        }
+        const table = `<table style="font-size:smaller;color:${this.options.grid.color}">${fragments.join('')}</table>`;
+        if (this.options.legend.container != null) {
+            html(this.options.legend.container, table);
+        } else {
+            let pos = '';
+            const p = this.options.legend.position;
+            let m = this.options.legend.margin;
+            if (m[0] == null) {
+                m = [m, m];
+            }
+            if (p.charAt(0) === 'n') {
+                pos += `top:${m[1] + this.plotOffset.top}px;`;
+            } else if (p.charAt(0) === 's') {
+                pos += `bottom:${m[1] + this.plotOffset.bottom}px;`;
+            }
+            if (p.charAt(1) === 'e') {
+                pos += `right:${m[0] + this.plotOffset.right}px;`;
+            } else if (p.charAt(1) === 'w') {
+                pos += `left:${m[0] + this.plotOffset.left}px;`;
+            }
+            appendTo(this.placeholder, `<div class="legend">${table.replace('style="', `style="position:absolute;${pos};`)}</div>`);
+            const legend = getChildren(this.placeholder, '.legend');
+            if (this.options.legend.backgroundOpacity !== 0.0) {
+                // put in the transparent background
+                // separately to avoid blended labels and
+                // label boxes
+                let c = this.options.legend.backgroundColor;
+                if (c == null) {
+                    c = this.options.grid.backgroundColor;
+                    if (c && typeof c === 'string') {
+                        c = new ColorHelper(c);
+                    } else {
+                        const style = extractColor(legend, 'background-color');
+                        c = new ColorHelper(style);
+                    }
+                    c.a = 1;
+                    c = c.toString();
+                }
+                const div = getChildren(legend);
+                const box = `<div style="position:absolute;width:${getWidth(div)}px;height:${getHeight(div)}px;${pos}background-color:${c};"> </div>`;
+                const boxElm = prependTo(legend, box);
+                setStyle(boxElm, { opacity: this.options.legend.backgroundOpacity });
+            }
         }
     }
-//#endregion
+    // #endregion
     // #region interactive features
     onMouseMove(e) {
         if (this.options.grid.hoverable) {
@@ -1057,7 +1997,31 @@ export default class Plot {
 
         this.executeHooks(this.hooks.processOptions, [this.options]);
     }
-    shutdown() {}
+    bindEvents() {
+        // bind events
+        if (this.options.grid.hoverable) {
+            this.eventHolder.addEventListener('mousemove', this.onMouseMove);
+            this.eventHolder.addEventListener('mouseleave', this.onMouseLeave);
+        }
+        if (this.options.grid.clickable) {
+            this.eventHolder.addEventListener('click', this.onClick);
+        }
+        this.executeHooks(this.hooks.bindEvents, [this.eventHolder]);
+    }
+    unbindEvents() {
+        this.eventHolder.removeEventListener('mousemove', this.onMouseMove);
+        this.eventHolder.removeEventListener('mouseleave', this.onMouseLeave);
+        this.eventHolder.removeEventListener('click', this.onClick);
+    }
+    shutdown() {
+        if (this.redrawTimeout) {
+            this.clearTimeout(this.redrawTimeout);
+        }
+
+        this.unbindEvents();
+
+        this.executeHooks(this.hooks.shutdown, [this.eventHolder]);
+    }
     destroy() {
         this.shutdown();
         removeData(this.placeholder, _plot_);

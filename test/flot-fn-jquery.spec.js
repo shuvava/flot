@@ -32,13 +32,23 @@ describe('flot-fn-jquery', () => {
         });
     });
     describe('#getChildren()', () => {
-        it('should have children', () => {
-            const id = `${_module_}-getChildren`;
-            const body = $('body');
-            const elm = $(`<div id="${id}"></div>`);
-            appendTo(body, elm);
-            appendTo(elm, $('<div></div>'));
+        const id = `${_module_}-getChildren`;
+        const body = $('body');
+        const elm = $(`<div id="${id}"></div>`);
+        appendTo(body, elm);
+        appendTo(elm, $('<div></div>'));
+        appendTo(elm, $('<span></span>'));
+        it('should have one child', () => {
             const children = getChildren(elm, 'div');
+            assert.equal(1, children.length);
+        });
+        it('should have children', () => {
+            const children = getChildren(elm);
+            const elmDOM = document.getElementById(id);
+            assert.equal(elmDOM.childNodes.length, children.length);
+        });
+        it('should have children', () => {
+            const children = getChildren(elm, '');
             const elmDOM = document.getElementById(id);
             assert.equal(elmDOM.childNodes.length, children.length);
         });

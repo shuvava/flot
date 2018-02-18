@@ -36,16 +36,26 @@ describe(_module_, () => {
     });
 
     describe('#getChildren()', () => {
+        const id = `${_module_}-getChildren`;
+        const body = document.getElementsByTagName('body')[0];
+        const elm = document.createElement('div');
+        elm.setAttribute('id', id);
+        appendTo(body, elm);
+        appendTo(elm, document.createElement('div'));
+        appendTo(elm, document.createElement('span'));
         it('should have children', () => {
-            const id = `${_module_}-getChildren`;
-            const body = document.getElementsByTagName('body')[0];
-            const elm = document.createElement('div');
-            elm.setAttribute('id', id);
-            appendTo(body, elm);
-            appendTo(elm, document.createElement('div'));
-            const children = getChildren(elm, 'div');
+            const children = getChildren(elm);
             const elmDOM = document.getElementById(id);
             assert.equal(elmDOM.childNodes.length, children.length);
+        });
+        it('should have children', () => {
+            const children = getChildren(elm, '');
+            const elmDOM = document.getElementById(id);
+            assert.equal(elmDOM.childNodes.length, children.length);
+        });
+        it('should have one child', () => {
+            const children = getChildren(elm, 'div');
+            assert.equal(1, children.length);
         });
     });
 

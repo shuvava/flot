@@ -11,7 +11,7 @@ const options = Object.freeze({
         margin: 5, // distance from grid edge to default legend container within plot
         backgroundColor: null, // null means auto-detect
         backgroundOpacity: 0.85, // set to 0 to avoid background
-        sorted: null, // default to no legend sorting
+        sorted: null, // default to no legend sorting, can be function|| reversed || descending
     },
     xaxis: {
         show: null, // null = auto-detect, true = always, false = never

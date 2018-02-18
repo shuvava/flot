@@ -6,6 +6,9 @@ import $ from 'jquery';
  * @param {string} selector List of classes to apply to lookup
  */
 function getChildren(element, selector) {
+    if (!selector || selector === '') {
+        return $(element).children();
+    }
     return $(element).children(selector);
 }
 
@@ -33,7 +36,16 @@ function getStyle(element, style) {
  * @param {element} element Element of DOM
  */
 function appendTo(root, element) {
-    $(element).appendTo(root);
+    return $(element).appendTo(root);
+}
+
+/**
+ * abstraction from jQuery prependTo Fn
+ * @param {element} root Element of DOM
+ * @param {element} element Element of DOM
+ */
+function prependTo(root, element) {
+    return $(element).prependTo(root);
 }
 
 /**
@@ -47,10 +59,19 @@ function detach(element) {
 /**
  * abstraction from jQuery addClass Fn
  * @param {element} element Element of DOM
- * @param {string} classes List CSS classes
+ * @param {String} classes List CSS classes
  */
 function addClass(element, classes) {
     $(element).addClass(classes);
+}
+
+/**
+ * abstraction from jQuery hasClass Fn
+ * @param {element} element Element of DOM
+ * @param {String} cssClass CSS class
+ */
+function hasClass(element, cssClass) {
+    return $(element).hasClass(cssClass);
 }
 
 /**
@@ -136,13 +157,54 @@ function remove(element, selector) {
     $(element).find(selector).remove();
 }
 
+/**
+ * extract value of specific style color property from element go up by DOM
+ * @param {element} element Existing element of DOM
+ * @param {String} css name of style property
+ * @returns {String} color of element || 'transparent'
+ */
+function extractColor(element, css) {
+    let _element = $(element);
+    let style;
+    do {
+        style = _element.css(css).toLowerCase();
+        if (style !== '' && style !== 'transparent') {
+            return style;
+        }
+        _element = _element.parent();
+    } while (_element.length && !$.nodeName(_element.get(0), 'body'));
+    // catch Safari's way of signalling transparent
+    if (style && style === 'rgba(0, 0, 0, 0)') {
+        return 'transparent';
+    }
+    return 'transparent';
+}
+
+/**
+ * abstraction from jQuery width Fn
+ * @param {element} element Existing element of DOM
+ */
+function getWidth(element) {
+    return $(element).width();
+}
+
+/**
+ * abstraction from jQuery height Fn
+ * @param {element} element Existing element of DOM
+ */
+function getHeight(element) {
+    return $(element).height();
+}
+
 export {
     getChildren,
     getStyle,
     setStyle,
     appendTo,
+    prependTo,
     detach,
     addClass,
+    hasClass,
     insertAfter,
     clone,
     extend,
@@ -152,4 +214,7 @@ export {
     empty,
     html,
     remove,
+    extractColor,
+    getWidth,
+    getHeight,
 };
