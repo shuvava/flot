@@ -318,6 +318,34 @@ function getHeight(element) {
     return parseInt(window.getComputedStyle(element).height, 10);
 }
 
+/**
+ * vanilla implementation of jQuery outerWidth Fn
+ * @param {element} element Existing element of DOM
+ * @param {Boolean} withMargin include margin
+ */
+function outerWidth(element, withMargin = false) {
+    let width = element.offsetWidth;
+    if (withMargin) {
+        const style = window.getComputedStyle(element);
+        width += parseInt(style.marginLeft, 10) + parseInt(style.marginRight, 10);
+    }
+    return width;
+}
+
+/**
+ * vanilla implementation of jQuery outerHeight Fn
+ * @param {element} element Existing element of DOM
+ * @param {Boolean} withMargin include margin
+ */
+function outerHeight(element, withMargin = false) {
+    let height = element.offsetHeight;
+    if (withMargin) {
+        const style = window.getComputedStyle(element);
+        height += parseInt(style.marginTop, 10) + parseInt(style.marginBottom, 10);
+    }
+    return height;
+}
+
 function noop() {}
 
 export {
@@ -343,4 +371,6 @@ export {
     extractColor,
     getWidth,
     getHeight,
+    outerHeight,
+    outerWidth,
 };

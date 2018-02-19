@@ -67,6 +67,7 @@ export default class Plot {
         // aliases:
         this.c2p = this.canvasToAxisCoords;
         this.p2c = this.axisToCanvasCoords;
+        this.drawOverlayFn = this.drawOverlay.bind(this);
 
         // initialize
         this.initPlugins(plugins);
@@ -167,7 +168,7 @@ export default class Plot {
      * @param {Array.<Object>} _data Graph data
      */
     setData(_data) {
-        this.parseData(_data);
+        this.series = this.parseData(_data);
         this.fillInSeriesOptions();
         this.processData();
     }
@@ -417,7 +418,8 @@ export default class Plot {
                 // make the ticks
                 this.setupTickGeneration(axis);
                 setTicks(axis);
-                snapRangeToTicks(axis);
+                snapRangeToTicks(axis, axis.ticks);
+                // find labelWidth/Height for axis
                 measureTickLabels(axis, this.surface);
             }
 
@@ -1049,7 +1051,7 @@ export default class Plot {
             return;
         }
         if (!this.redrawTimeout) {
-            this.redrawTimeout = window.setTimeout(this.drawOverlay.bind(this), timeOut);
+            this.redrawTimeout = window.setTimeout(this.drawOverlayFn, timeOut);
         }
     }
     /**

@@ -196,6 +196,23 @@ function getHeight(element) {
     return $(element).height();
 }
 
+/**
+ * abstraction from jQuery outerWidth Fn
+ * @param {element} element Existing element of DOM
+ */
+function outerWidth(element, withMargin = false) {
+    return $(element).outerWidth(withMargin);
+}
+
+/**
+ * abstraction from jQuery outerHeight Fn
+ * @param {element} element Existing element of DOM
+ * @param {Boolean} withMargin include margin
+ */
+function outerHeight(element, withMargin = false) {
+    return $(element).outerHeight(withMargin);
+}
+
 export {
     getChildren,
     getStyle,
@@ -217,4 +234,6 @@ export {
     extractColor,
     getWidth,
     getHeight,
+    outerWidth,
+    outerHeight,
 };

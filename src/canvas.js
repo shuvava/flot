@@ -3,7 +3,17 @@
  */
 import { hasOwnProperty } from './flot-fn';
 import { noop } from './flot-fn-vanilla';
-import { getChildren, setStyle, appendTo, detach, addClass, insertAfter, clone } from './flot-fn-jquery';
+import {
+    getChildren,
+    setStyle,
+    appendTo,
+    detach,
+    addClass,
+    insertAfter,
+    clone,
+    outerWidth,
+    outerHeight,
+} from './flot-fn-jquery';
 
 // TODO: [VS] switch to vanilla implementation
 noop();
@@ -283,8 +293,8 @@ export default class Canvas {
             }
 
             styleCache[text] = {
-                width: element.outerWidth(true),
-                height: element.outerHeight(true),
+                width: outerWidth(element, true),
+                height: outerHeight(element, true),
                 element: element,
                 positions: [],
             };

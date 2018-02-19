@@ -10,12 +10,12 @@
 	<script type="text/javascript">
 
 	$(function() {
-
+		console.log('1');
 		// We use an inline data source in the example, usually data would
 		// be fetched from a server
 
 		var data = [],
-			totalPoints = 300;
+			totalPoints = 10;
 
 		function getRandomData() {
 
@@ -78,8 +78,8 @@
 		});
 
 		function update() {
-
-			plot.setData([getRandomData()]);
+			var _data = [getRandomData()];
+			plot.setData(_data);
 
 			// Since the axes don't change, we don't need to call plot.setupGrid()
 
