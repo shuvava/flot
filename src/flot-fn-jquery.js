@@ -113,7 +113,7 @@ function offset(element) {
  * @param {string} id Custom property id
  * @param {object} obj Object to store
  */
-function data(element, id, obj) {
+function domData(element, id, obj) {
     if (obj != null) {
         $(element).data(id, obj);
     } else {
@@ -209,7 +209,7 @@ export {
     clone,
     extend,
     offset,
-    data,
+    domData,
     removeData,
     empty,
     html,

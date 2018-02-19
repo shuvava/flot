@@ -28,8 +28,8 @@
  * offset to the y value. For line series, extra data points are inserted through
  * interpolation. If there's a second y value, it's also adjusted (e.g for bar charts or filled areas).
  */
-import $ from 'jquery';
-import '../bak/jquery.flot';
+// import $ from 'jquery';
+// import '../bak/jquery.flot';
 
 const _MODE_TYPE_ = 'stack';
 
@@ -183,9 +183,16 @@ function init(plot) {
 }
 
 // add plugin into plot object
-$.plot.plugins.push({
+// $.plot.plugins.push({
+//     init: init,
+//     options: options,
+//     name: _MODE_TYPE_,
+//     version: '1.0',
+// });
+export default Object.freeze({
     init: init,
     options: options,
     name: _MODE_TYPE_,
     version: '1.0',
 });
+

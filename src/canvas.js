@@ -29,7 +29,7 @@ export default class Canvas {
     constructor(cls, container) {
         let element = getChildren(container, `.${cls}`)[0];
 
-        if (element === null) {
+        if (element == null) {
             element = document.createElement('canvas');
             element.className = cls;
             setStyle(element, {

@@ -1,4 +1,4 @@
-import $ from 'jquery';
+// import $ from 'jquery';
 // import 'Flot';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
@@ -184,7 +184,13 @@ function init(plot) {
 }
 
 // add plugin into plot object
-$.plot.plugins.push({
+// $.plot.plugins.push({
+//     init: init,
+//     options: options,
+//     name: _MODE_TYPE_,
+//     version: '1.0',
+// });
+export default Object.freeze({
     init: init,
     options: options,
     name: _MODE_TYPE_,

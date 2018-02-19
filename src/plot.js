@@ -5,7 +5,7 @@ import {
     hasClass,
     appendTo, prependTo,
     extend, offset,
-    data, removeData, empty,
+    domData, removeData, empty,
     html, remove, extractColor,
     getWidth, getHeight,
 } from './flot-fn-jquery';
@@ -44,6 +44,7 @@ const _plot_ = 'plot';
  */
 export default class Plot {
     constructor(placeholder, data_, options_, plugins) {
+        this.placeholder = placeholder;
         this.series = [];
         this.plotOffset = extend(true, {}, defPlotOffset);
         this.options = extend(true, {}, defOptions);
@@ -361,6 +362,7 @@ export default class Plot {
 
         this.surface = new Canvas('flot-base', this.placeholder);
         this.overlay = new Canvas('flot-overlay', this.placeholder); // overlay canvas for interactive features
+        this.eventHolder = this.overlay.element;
 
         this.ctx = this.surface.context;
         this.octx = this.overlay.context;
@@ -369,13 +371,13 @@ export default class Plot {
         this.unbindEvents();
 
         // If we're re-using a plot object, shut down the old one
-        const existing = data(this.placeholder, 'plot');
+        const existing = domData(this.placeholder, 'plot');
         if (existing) {
             existing.shutdown();
             this.overlay.clear();
         }
 
-        data(this.placeholder, 'plot', this);
+        domData(this.placeholder, 'plot', this);
     }
 
     setupGrid() {
@@ -620,6 +622,7 @@ export default class Plot {
                 options: extend(true, {}, axes === this.xaxes ? this.options.xaxis : this.options.yaxis),
             };
         }
+        return axes[number - 1];
     }
     fillInSeriesOptions() {
         let neededColors = this.series.length;
@@ -1046,7 +1049,7 @@ export default class Plot {
             return;
         }
         if (!this.redrawTimeout) {
-            this.redrawTimeout = window.setTimeout(this.drawOverlay, timeOut);
+            this.redrawTimeout = window.setTimeout(this.drawOverlay.bind(this), timeOut);
         }
     }
     /**

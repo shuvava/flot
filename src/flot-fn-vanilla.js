@@ -224,7 +224,7 @@ function _getDataAttribute(id) {
  * @param {string} id Custom property id
  * @param {object} obj Object to store
  */
-function data(element, id, obj) {
+function domData(element, id, obj) {
     const attr = _getDataAttribute(id);
     if (obj != null) {
         element.setAttribute(attr, JSON.stringify(obj));
@@ -335,7 +335,7 @@ export {
     clone,
     extend,
     offset,
-    data,
+    domData,
     removeData,
     empty,
     html,

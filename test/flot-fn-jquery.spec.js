@@ -3,7 +3,7 @@ import $ from 'jquery';
 import {
     appendTo, setStyle, getChildren,
     detach, addClass, insertAfter, clone,
-    extend, offset, data, removeData, empty,
+    extend, offset, domData, removeData, empty,
     html, remove,
 } from '../src/flot-fn-jquery';
 
@@ -140,8 +140,8 @@ describe('flot-fn-jquery', () => {
             const elm = $(`<div id="${id}"></div>`);
             appendTo(body, elm);
             const propID = 'ttt';
-            data(elm, propID, { a: 1 });
-            const prop = data(elm, propID);
+            domData(elm, propID, { a: 1 });
+            const prop = domData(elm, propID);
             assert.isDefined(prop);
             assert.equal(prop.a, 1);
         });
@@ -153,11 +153,11 @@ describe('flot-fn-jquery', () => {
             const elm = $(`<div id="${id}"></div>`);
             appendTo(body, elm);
             const propID = 'ttt';
-            data(elm, propID, { a: 1 });
-            let prop = data(elm, propID);
+            domData(elm, propID, { a: 1 });
+            let prop = domData(elm, propID);
             assert.isDefined(prop);
             removeData(elm, propID);
-            prop = data(elm, propID);
+            prop = domData(elm, propID);
             assert.isUndefined(prop);
         });
     });

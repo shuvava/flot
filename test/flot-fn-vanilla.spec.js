@@ -2,7 +2,7 @@
 import {
     appendTo, setStyle, getChildren,
     detach, addClass, insertAfter, clone,
-    extend, offset, data, removeData,
+    extend, offset, domData, removeData,
     empty, html, remove,
 } from '../src/flot-fn-vanilla';
 
@@ -185,8 +185,8 @@ describe(_module_, () => {
             elm.setAttribute('id', id);
             appendTo(body, elm);
             const propID = 'ttt';
-            data(elm, propID, { a: 1 });
-            const prop = data(elm, propID);
+            domData(elm, propID, { a: 1 });
+            const prop = domData(elm, propID);
             assert.isDefined(prop);
             assert.equal(prop.a, 1);
         });
@@ -200,11 +200,11 @@ describe(_module_, () => {
             elm.setAttribute('id', id);
             appendTo(body, elm);
             const propID = 'ttt';
-            data(elm, propID, { a: 1 });
-            let prop = data(elm, propID);
+            domData(elm, propID, { a: 1 });
+            let prop = domData(elm, propID);
             assert.isDefined(prop);
             removeData(elm, propID);
-            prop = data(elm, propID);
+            prop = domData(elm, propID);
             assert.isUndefined(prop);
         });
     });

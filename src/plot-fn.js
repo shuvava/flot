@@ -538,7 +538,7 @@ function tickFormatter(value, axis) {
     return formatted;
 }
 
-export default {
+export {
     axisNumber,
     updateAxis,
     getBarLeftAlign,

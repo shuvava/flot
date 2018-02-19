@@ -127,7 +127,7 @@ const hooks = Object.freeze({
     shutdown: [],
 });
 
-export default {
+export {
     options,
     plotOffset,
     hooks,
