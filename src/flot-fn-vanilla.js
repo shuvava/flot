@@ -346,6 +346,22 @@ function outerHeight(element, withMargin = false) {
     return height;
 }
 
+/**
+ * vanilla implementation of jQuery hide Fn
+ * @param {element} element Existing element of DOM
+ */
+function hide(element) {
+    element.style.display = 'none';
+}
+
+/**
+ * vanilla implementation of jQuery show Fn
+ * @param {element} element Existing element of DOM
+ */
+function show(element) {
+    element.style.display = 'block';
+}
+
 function noop() {}
 
 export {
@@ -373,4 +389,6 @@ export {
     getHeight,
     outerHeight,
     outerWidth,
+    hide,
+    show,
 };

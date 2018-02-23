@@ -61,7 +61,6 @@ function parseColorFromString(str) {
             r: parseInt(res[1], 10),
             g: parseInt(res[2], 10),
             b: parseInt(res[3], 10),
-            a: 0,
         };
     }
     // Look for rgba(num,num,num,num)
@@ -91,7 +90,6 @@ function parseColorFromString(str) {
             r: parseInt(res[1], 16),
             g: parseInt(res[2], 16),
             b: parseInt(res[3], 16),
-            a: 0,
         };
     }
     // Look for #fff
@@ -101,7 +99,6 @@ function parseColorFromString(str) {
             r: parseInt(res[1] + res[1], 16),
             g: parseInt(res[2] + res[2], 16),
             b: parseInt(res[3] + res[3], 16),
-            a: 0,
         };
     }
     // Otherwise, we're most likely dealing with a named color
@@ -114,7 +111,7 @@ function parseColorFromString(str) {
     // default to black
     res = lookupColors[name] || [0, 0, 0];
     return {
-        r: res[0], g: res[1], b: res[2], a: 0,
+        r: res[0], g: res[1], b: res[2],
     };
 }
 
@@ -129,7 +126,7 @@ export default class ColorHelper {
         this.r = r || 0;
         this.g = g || 0;
         this.b = b || 0;
-        this.a = a || 0;
+        this.a = a != null ? a : 1;
         this.normalize();
     }
 

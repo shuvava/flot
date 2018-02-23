@@ -13,6 +13,9 @@ import {
     clone,
     outerWidth,
     outerHeight,
+    hide,
+    show,
+    html,
 } from './flot-fn-jquery';
 
 // TODO: [VS] switch to vanilla implementation
@@ -145,7 +148,7 @@ export default class Canvas {
                 const layer = this.getTextLayer(layerKey);
                 const layerCache = cache[layerKey];
 
-                layer.hide();
+                hide(layer);
 
                 for (const styleKey in layerCache) { // eslint-disable-line no-restricted-syntax
                     if (hasOwnProperty.call(layerCache, styleKey)) {
@@ -179,7 +182,7 @@ export default class Canvas {
                     }
                 }
 
-                layer.show();
+                show(layer);
             }
         }
     }
@@ -190,7 +193,7 @@ export default class Canvas {
      */
     getTextLayer(classes) {
         // Create the text layer if it doesn't exist
-        if (this.text[classes] !== null) {
+        if (this.text[classes] != null) {
             return this.text[classes];
         }
 
@@ -277,6 +280,7 @@ export default class Canvas {
         // If we can't find a matching element in our cache, create a new one
         if (styleCache[text] == null) {
             const element = document.createElement('div');
+            html(element, text);
             setStyle(element, {
                 position: 'absolute',
                 'max-width': width,

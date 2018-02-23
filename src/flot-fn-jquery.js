@@ -213,6 +213,22 @@ function outerHeight(element, withMargin = false) {
     return $(element).outerHeight(withMargin);
 }
 
+/**
+ * abstraction from jQuery hide Fn
+ * @param {element} element Existing element of DOM
+ */
+function hide(element) {
+    $(element).hide();
+}
+
+/**
+ * abstraction from jQuery show Fn
+ * @param {element} element Existing element of DOM
+ */
+function show(element) {
+    $(element).show();
+}
+
 export {
     getChildren,
     getStyle,
@@ -236,4 +252,6 @@ export {
     getHeight,
     outerWidth,
     outerHeight,
+    hide,
+    show,
 };

@@ -191,7 +191,7 @@ export default class Plot {
 
         // Determine the axis's position in its direction and on its side
         const _axis = isXAxis ? this.xaxes : this.yaxes;
-        for (let i = 0; _axis.length; i += 1) {
+        for (let i = 0; i < _axis.length; i += 1) {
             const a = _axis[i];
             if (a && (a.show || a.reserveSpace)) {
                 if (a === axis) {
@@ -1897,7 +1897,7 @@ export default class Plot {
                 axisOptions.tickColor = axisOptions.color;
             }
 
-            axisOptions = extend(true, {}, this.options.xaxes, axisOptions);
+            axisOptions = extend(true, {}, this.options.xaxis, axisOptions);
             this.options.xaxes[i] = axisOptions;
 
             if (axisOptions.font) {
