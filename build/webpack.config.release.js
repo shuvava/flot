@@ -5,6 +5,7 @@ module.exports = (env) => {
         return {};
     }
     const config = {
+        mode: 'production',
         plugins: [
             new webpack.optimize.UglifyJsPlugin({
                 compress: { warnings: false },

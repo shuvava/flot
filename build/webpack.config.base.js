@@ -1,5 +1,5 @@
 const path = require('path');
-const webpack = require('webpack');
+// const webpack = require('webpack');
 
 module.exports = (env) => {
     if (env.babel == null) {
@@ -46,12 +46,12 @@ module.exports = (env) => {
             ],
         },
         plugins: [
-            new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: env.release ? 'debug' : 'production',
-                },
-                PRODUCTION: env.release,
-            }),
+            // new webpack.DefinePlugin({
+            //     'process.env': {
+            //         NODE_ENV: env.release ? 'debug' : 'production',
+            //     },
+            //     PRODUCTION: env.release,
+            // }),
         ],
     };
 
