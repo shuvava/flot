@@ -1,4 +1,3 @@
-/* globals PRODUCTION */
 // import 'babel-polyfill';
 import $ from 'jquery'; // eslint-disable-line no-unused-vars
 // import '../bak/jquery.flot';
@@ -35,7 +34,7 @@ if (!true) { ...}
 ```
 and removed by uglifier
 */
-if (!PRODUCTION) {
+if (!window.PRODUCTION) {
     console.log('debug version');
 }
 

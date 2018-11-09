@@ -78,27 +78,35 @@ export default class Plot {
         this.draw();
         this.bindEvents();
     }
+
     getPlaceholder() {
         return this.placeholder;
     }
+
     getCanvas() {
         return this.surface.element;
     }
+
     getPlotOffset() {
         return this.plotOffset;
     }
+
     getOptions() {
         return this.options;
     }
+
     getData() {
         return this.series;
     }
+
     getXAxes() {
         return this.xaxes;
     }
+
     getYAxes() {
         return this.yaxes;
     }
+
     getAxes() {
         const res = {};
         const arr = this.xaxes.concat(this.yaxes);
@@ -111,6 +119,7 @@ export default class Plot {
         }
         return res;
     }
+
     /**
      * return flat array without annoying null entries
      */
@@ -119,18 +128,22 @@ export default class Plot {
             .concat(this.yaxes)
             .filter(item => item != null);
     }
+
     width() {
         return this.plotWidth;
     }
+
     height() {
         return this.plotHeight;
     }
+
     offset() {
         const _offset = offset(this.eventHolder);
         _offset.left += this.plotOffset.left;
         _offset.top += this.plotOffset.top;
         return _offset;
     }
+
     pointOffset(point) {
         const left = this.xaxes[axisNumber(point, 'x') - 1].p2c(+point.x) + this.plotOffset.left;
         const top = this.yaxes[axisNumber(point, 'y') - 1].p2c(+point.y) + this.plotOffset.top;
@@ -139,6 +152,7 @@ export default class Plot {
             top: parseInt(top, 10),
         };
     }
+
     /**
      * extends array of data by default values
      * @param {Array.<Object>} _data Graph data
@@ -163,6 +177,7 @@ export default class Plot {
 
         return res;
     }
+
     /**
      * Update graph state
      * @param {Array.<Object>} _data Graph data
@@ -172,6 +187,7 @@ export default class Plot {
         this.fillInSeriesOptions();
         this.processData();
     }
+
     allocateAxisBoxFirstPhase(axis) {
         // find the bounding box of the axis by looking at label
         // widths/heights and ticks, make room by diminishing the
@@ -452,6 +468,7 @@ export default class Plot {
 
         this.insertLegend();
     }
+
     setupTickGeneration(axis) {
         const { options: opts } = axis;
         // estimate number of ticks
@@ -556,6 +573,7 @@ export default class Plot {
         this.surface.resize(width, height);
         this.overlay.resize(width, height);
     }
+
     canvasToAxisCoords(pos) {
         // return an object with x/y corresponding to all used axes
         const res = {};
@@ -579,6 +597,7 @@ export default class Plot {
 
         return res;
     }
+
     axisToCanvasCoords(pos) {
         // get canvas coords from the first pair of x/y found in pos
         const res = {};
@@ -615,6 +634,7 @@ export default class Plot {
 
         return res;
     }
+
     // TODO: [vs] make it static
     getOrCreateAxis(axes, number) {
         if (!axes[number - 1]) {
@@ -626,6 +646,7 @@ export default class Plot {
         }
         return axes[number - 1];
     }
+
     fillInSeriesOptions() {
         let neededColors = this.series.length;
         let maxIndex = -1;
@@ -718,6 +739,7 @@ export default class Plot {
             s.yaxis = this.getOrCreateAxis(this.yaxes, axisNumber(s, 'y'));
         }
     }
+
     processData() {
         // const topSentry = Number.POSITIVE_INFINITY;
         // const bottomSentry = Number.NEGATIVE_INFINITY;
@@ -933,6 +955,7 @@ export default class Plot {
             }
         }
     }
+
     // #region draw
     draw() {
         this.surface.clear();
@@ -966,6 +989,7 @@ export default class Plot {
 
         this.triggerRedrawOverlay();
     }
+
     drawSeries(series) {
         if (series.lines.show) {
             this.drawSeriesLines(series);
@@ -977,6 +1001,7 @@ export default class Plot {
             this.drawSeriesPoints(series);
         }
     }
+
     highlight(s, point, auto) {
         if (typeof s === 'number') {
             s = this.series[s]; // eslint-disable-line prefer-destructuring
@@ -993,6 +1018,7 @@ export default class Plot {
             this.highlights[i].auto = false;
         }
     }
+
     unhighlight(s, point) {
         if (s == null && point == null) {
             this.highlights = [];
@@ -1015,6 +1041,7 @@ export default class Plot {
             this.triggerRedrawOverlay();
         }
     }
+
     indexOfHighlight(s, point) {
         for (let i = 0; i < this.highlights.length; i += 1) {
             const h = this.highlights[i];
@@ -1024,6 +1051,7 @@ export default class Plot {
         }
         return -1;
     }
+
     drawOverlay() {
         if (this.redrawTimeout) {
             window.clearTimeout(this.redrawTimeout);
@@ -1044,6 +1072,7 @@ export default class Plot {
         this.octx.restore();
         this.executeHooks(this.hooks.drawOverlay, [this.octx]);
     }
+
     triggerRedrawOverlay() {
         const timeOut = this.options.interaction.redrawOverlayInterval;
         if (timeOut === -1) { // skip event queue
@@ -1054,6 +1083,7 @@ export default class Plot {
             this.redrawTimeout = window.setTimeout(this.drawOverlayFn, timeOut);
         }
     }
+
     /**
      * draw highlight contour
      * @param {*} series
@@ -1085,6 +1115,7 @@ export default class Plot {
         this.octx.closePath();
         this.octx.stroke();
     }
+
     drawBarHighlight(series, point) {
         const highlightColor = (typeof series.highlightColor === 'string')
             ? series.highlightColor
@@ -1099,6 +1130,7 @@ export default class Plot {
             this.octx, series.bars.horizontal, series.bars.lineWidth,
         );
     }
+
     getColorOrGradient(spec, bottom, top, defaultColor) {
         if (typeof spec === 'string') {
             return spec;
@@ -1124,6 +1156,7 @@ export default class Plot {
         }
         return gradient;
     }
+
     drawSeriesPoints(series) {
         this.ctx.save();
         this.ctx.translate(this.plotOffset.left, this.plotOffset.top);
@@ -1165,6 +1198,7 @@ export default class Plot {
         );
         this.ctx.restore();
     }
+
     drawSeriesLines(series) {
         this.ctx.save();
         this.ctx.translate(this.plotOffset.left, this.plotOffset.top);
@@ -1223,6 +1257,7 @@ export default class Plot {
         }
         this.ctx.restore();
     }
+
     drawBackground() {
         this.ctx.save();
         this.ctx.translate(this.plotOffset.left, this.plotOffset.top);
@@ -1236,6 +1271,7 @@ export default class Plot {
         this.ctx.fillRect(0, 0, this.plotWidth, this.plotHeight);
         this.ctx.restore();
     }
+
     drawGrid() {
         const allAxes = this.allAxes();
 
@@ -1278,10 +1314,10 @@ export default class Plot {
 
                 // clip
                 if (
-                    xrange.to < xrange.axis.min ||
-                    xrange.from > xrange.axis.max ||
-                    yrange.to < yrange.axis.min ||
-                    yrange.from > yrange.axis.max
+                    xrange.to < xrange.axis.min
+                    || xrange.from > xrange.axis.max
+                    || yrange.to < yrange.axis.min
+                    || yrange.from > yrange.axis.max
                 ) {
                     continue;
                 }
@@ -1397,9 +1433,9 @@ export default class Plot {
                 yoff = 0;
 
                 if (
-                    v != null ||
-                    v < axis.min ||
-                    v > axis.max
+                    v != null
+                    || v < axis.min
+                    || v > axis.max
                     // skip those lying on the axes if we got a border
                     || (
                         t === 'full'
@@ -1500,6 +1536,7 @@ export default class Plot {
 
         this.ctx.restore();
     }
+
     drawAxisLabels() {
         const allAxes = this.allAxes();
         for (let ix = 0; ix < allAxes.length; ix += 1) {
@@ -1515,7 +1552,7 @@ export default class Plot {
             this.surface.removeText(layer);
 
             if (!axis.show || axis.ticks.length === 0) {
-                return;
+                continue;
             }
 
             for (let i = 0; i < axis.ticks.length; i += 1) {
@@ -1552,6 +1589,7 @@ export default class Plot {
             }
         }
     }
+
     // TODO: [vs] move it into separate module
     insertLegend() {
         if (this.options.legend.container != null) {
@@ -1609,9 +1647,9 @@ export default class Plot {
                 rowStarted = true;
             }
 
-            fragments.push(`<td class="legendColorBox"><div style="border:1px solid ${this.options.legend.labelBoxBorderColor};padding:1px">` +
-                `<div style="width:4px;height:0;border:5px solid ${entry.color};overflow:hidden"></div></div></td>` +
-                `<td class="legendLabel">${entry.label}</td>`);
+            fragments.push(`<td class="legendColorBox"><div style="border:1px solid ${this.options.legend.labelBoxBorderColor};padding:1px">`
+                + `<div style="width:4px;height:0;border:5px solid ${entry.color};overflow:hidden"></div></div></td>`
+                + `<td class="legendLabel">${entry.label}</td>`);
         }
 
         if (rowStarted) {
@@ -1666,6 +1704,7 @@ export default class Plot {
             }
         }
     }
+
     // #endregion
     // #region interactive features
     onMouseMove(e) {
@@ -1676,18 +1715,21 @@ export default class Plot {
             );
         }
     }
+
     onMouseLeave(e) {
         this.triggerClickHoverEvent(
             'plothover', e,
             () => false,
         );
     }
+
     onClick(e) {
         this.triggerClickHoverEvent(
             'plotclick', e,
             s => s.clickable !== false,
         );
     }
+
     /**
      * returns the data item the mouse is over, or null if none is found
      * @param {Number} mouseX X canvas coordinate
@@ -1728,8 +1770,8 @@ export default class Plot {
                     }
                     // For points and lines, the cursor must be within a
                     // certain distance to the data point
-                    if (x - mx > maxx || x - mx < -maxx ||
-                       y - my > maxy || y - my < -maxy) {
+                    if (x - mx > maxx || x - mx < -maxx
+                       || y - my > maxy || y - my < -maxy) {
                         continue;
                     }
 
@@ -1787,6 +1829,7 @@ export default class Plot {
         }
         return null;
     }
+
     /**
      * trigger click or hover event (they send the same parameters so we share their code)
      * @param {String} eventname Name of event {click|hover}
@@ -1812,10 +1855,10 @@ export default class Plot {
             // clear auto-highlights
             for (let i = 0; i < this.highlights.length; i += 1) {
                 const h = this.highlights[i];
-                if (h.auto === eventname &&
-                   !(item && h.series === item.series &&
-                   h.point[0] === item.datapoint[0] &&
-                   h.point[1] === item.datapoint[1])) {
+                if (h.auto === eventname
+                   && !(item && h.series === item.series
+                   && h.point[0] === item.datapoint[0]
+                   && h.point[1] === item.datapoint[1])) {
                     this.unhighlight(h.series, h.point);
                 }
             }
@@ -1827,6 +1870,7 @@ export default class Plot {
 
         this.placeholder.trigger(eventname, [pos, item]);
     }
+
     // #endregion
     executeHooks(hook, args) {
         const _args = [this].concat(args);
@@ -1834,6 +1878,7 @@ export default class Plot {
             hook[i].apply(this, _args);
         }
     }
+
     initPlugins(plugins) {
         // References to key classes, allowing plugins to modify them
         const classes = {
@@ -1847,6 +1892,7 @@ export default class Plot {
             }
         }
     }
+
     parseOptions(opts) {
         this.options = extend(true, this.options, opts);
 
@@ -2002,6 +2048,7 @@ export default class Plot {
 
         this.executeHooks(this.hooks.processOptions, [this.options]);
     }
+
     bindEvents() {
         // bind events
         if (this.options.grid.hoverable) {
@@ -2013,11 +2060,13 @@ export default class Plot {
         }
         this.executeHooks(this.hooks.bindEvents, [this.eventHolder]);
     }
+
     unbindEvents() {
         this.eventHolder.removeEventListener('mousemove', this.onMouseMove);
         this.eventHolder.removeEventListener('mouseleave', this.onMouseLeave);
         this.eventHolder.removeEventListener('click', this.onClick);
     }
+
     shutdown() {
         if (this.redrawTimeout) {
             this.clearTimeout(this.redrawTimeout);
@@ -2027,6 +2076,7 @@ export default class Plot {
 
         this.executeHooks(this.hooks.shutdown, [this.eventHolder]);
     }
+
     destroy() {
         this.shutdown();
         removeData(this.placeholder, _plot_);

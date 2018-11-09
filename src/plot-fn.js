@@ -162,6 +162,7 @@ function plotLineArea(datapoints, axisx, axisy, ctx) {
     // we process each segment in two turns, first forward
     // direction to sketch out top, then once we hit the
     // end we go backwards to sketch the bottom
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         if (ps > 0 && i > points.length + ps) {
             break;

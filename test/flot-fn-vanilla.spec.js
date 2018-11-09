@@ -1,4 +1,4 @@
-/* globals describe it assert expect */
+import { assert, expect } from 'chai';
 import {
     appendTo, setStyle, getChildren,
     detach, addClass, insertAfter, clone,

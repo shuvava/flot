@@ -72,6 +72,7 @@ function processDatapoints(plot, series, dataPoints) {
     let inxSrs = 0;// index in current series with stack
     let inxPrevSrs = 0;// index in previous series with stack
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         if (inxSrs >= points.length) {
             break;
