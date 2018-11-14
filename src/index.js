@@ -4,6 +4,7 @@ import $ from 'jquery'; // eslint-disable-line no-unused-vars
 import Plot from './plot';
 import flotCategories from './flot-categories'; // this plugin should be added at first, crush page in other case
 import flotStack from './flot-stack';
+import flotFillBetween from './flot-fillbetween';
 import ColorHelper from './colorhelper';
 
 if (window.$) {
@@ -22,6 +23,7 @@ if (window.$) {
     };
     window.$.plot.plugins.push(flotCategories);
     window.$.plot.plugins.push(flotStack);
+    window.$.plot.plugins.push(flotFillBetween);
 }
 /* example of using compile directives of webpack
 in debug version it will be transformed into
