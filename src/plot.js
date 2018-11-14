@@ -1127,7 +1127,7 @@ export default class Plot {
             point[0], point[1], point[2] || 0,
             barLeft, barLeft + series.bars.barWidth,
             () => highlightColor, series.xaxis, series.yaxis,
-            this.octx, series.bars.horizontal, series.bars.lineWidth,
+            series.bars.horizontal, series.bars.lineWidth,
         );
     }
 
@@ -1257,6 +1257,154 @@ export default class Plot {
         }
         this.ctx.restore();
     }
+
+    drawSeriesBars(series) {
+        this.ctx.save();
+        this.ctx.translate(this.plotOffset.left, this.plotOffset.top);
+
+        // FIXME: figure out a way to add shadows (for instance along the right edge)
+        this.ctx.lineWidth = series.bars.lineWidth;
+        this.ctx.strokeStyle = series.color;
+
+        let barLeft;
+
+        switch (series.bars.align) {
+            case 'left':
+                barLeft = 0;
+                break;
+            case 'right':
+                barLeft = -series.bars.barWidth;
+                break;
+            default:
+                barLeft = -series.bars.barWidth / 2;
+        }
+
+        const fillStyleCallback = series.bars.fill ? (bottom, top) => getFillStyle(series.bars, series.color, bottom, top) : null;
+        // plotBars(series.datapoints, barLeft, barLeft + series.bars.barWidth, fillStyleCallback, series.xaxis, series.yaxis);
+        const { points } = series.datapoints;
+        const ps = series.datapoints.pointsize;
+
+        for (let i = 0; i < points.length; i += ps) {
+            if (points[i] == null) {
+                continue;
+            }
+            this.drawBar(
+                points[i],
+                points[i + 1],
+                points[i + 2],
+                barLeft,
+                barLeft + series.bars.barWidth,
+                fillStyleCallback,
+                series.xaxis,
+                series.yaxis,
+                series.bars.horizontal,
+                series.bars.lineWidth,
+            );
+        }
+        this.ctx.restore();
+    }
+
+    drawBar(x, y, b, barLeft, barRight, fillStyleCallback, axisx, axisy, horizontal, lineWidth) {
+        let left;
+        let right;
+        let bottom;
+        let top;
+        let drawLeft;
+        let drawRight;
+        let drawTop;
+        let drawBottom;
+        let tmp;
+
+        // in horizontal mode, we start the bar from the left
+        // instead of from the bottom so it appears to be
+        // horizontal rather than vertical
+        if (horizontal) {
+            drawBottom = true;
+            drawRight = true;
+            drawTop = true;
+            drawLeft = false;
+            left = b;
+            right = x;
+            top = y + barLeft;
+            bottom = y + barRight;
+
+            // account for negative bars
+            if (right < left) {
+                tmp = right;
+                right = left;
+                left = tmp;
+                drawLeft = true;
+                drawRight = false;
+            }
+        } else {
+            drawLeft = true;
+            drawRight = true;
+            drawTop = true;
+            drawBottom = false;
+            left = x + barLeft;
+            right = x + barRight;
+            bottom = b;
+            top = y;
+
+            // account for negative bars
+            if (top < bottom) {
+                tmp = top;
+                top = bottom;
+                bottom = tmp;
+                drawBottom = true;
+                drawTop = false;
+            }
+        }
+
+        // clip
+        if (right < axisx.min || left > axisx.max
+            || top < axisy.min || bottom > axisy.max) { return; }
+
+        if (left < axisx.min) {
+            left = axisx.min;
+            drawLeft = false;
+        }
+
+        if (right > axisx.max) {
+            right = axisx.max;
+            drawRight = false;
+        }
+
+        if (bottom < axisy.min) {
+            bottom = axisy.min;
+            drawBottom = false;
+        }
+
+        if (top > axisy.max) {
+            top = axisy.max;
+            drawTop = false;
+        }
+
+        left = axisx.p2c(left);
+        bottom = axisy.p2c(bottom);
+        right = axisx.p2c(right);
+        top = axisy.p2c(top);
+
+        // fill the bar
+        if (fillStyleCallback) {
+            this.ctx.fillStyle = fillStyleCallback(bottom, top);
+            this.ctx.fillRect(left, top, right - left, bottom - top);
+        }
+
+        // draw outline
+        if (lineWidth > 0 && (drawLeft || drawRight || drawTop || drawBottom)) {
+            this.ctx.beginPath();
+
+            // FIXME: inline moveTo is buggy with excanvas
+            this.ctx.moveTo(left, bottom);
+            if (drawLeft) { this.ctx.lineTo(left, top); } else { this.ctx.moveTo(left, top); }
+            if (drawTop) { this.ctx.lineTo(right, top); } else { this.ctx.moveTo(right, top); }
+            if (drawRight) { this.ctx.lineTo(right, bottom); } else { this.ctx.moveTo(right, bottom); }
+            if (drawBottom) { this.ctx.lineTo(left, bottom); } else { this.ctx.moveTo(left, bottom); }
+            this.ctx.stroke();
+        }
+    }
+
 
     drawBackground() {
         this.ctx.save();
