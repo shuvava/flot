@@ -1754,7 +1754,7 @@ export default class Plot {
         const lf = this.options.legend.labelFormatter;
 
         // Build a list of legend entries, with each having a label and a color
-        for (let i = 0; i < this.series.legend; i += 1) {
+        for (let i = 0; i < this.series.length; i += 1) {
             const s = this.series[i];
             if (s.label) {
                 const label = lf ? lf(s.label, s) : s.label;

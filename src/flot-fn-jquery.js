@@ -169,7 +169,7 @@ function extractColor(element, css) {
     do {
         style = _element.css(css).toLowerCase();
         if (style !== '' && style !== 'transparent') {
-            return style;
+            break;
         }
         _element = _element.parent();
     } while (_element.length && !$.nodeName(_element.get(0), 'body'));
