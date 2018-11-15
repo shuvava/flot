@@ -1,4 +1,5 @@
 import ColorHelper from './colorhelper';
+import findIndex from 'lodash/findIndex';
 
 function axisNumber(obj, coord) {
     let axis = obj[`${coord}axis`];
@@ -399,12 +400,15 @@ function extractRange(ranges, coord, axes) {
             }
         }
     }
-    // // backwards-compat stuff - to be removed in future
-    // if (!ranges[key]) {
-    //     axis = coord === 'x' ? xaxes[0] : yaxes[0];
-    //     from = ranges[`${coord}1`];
-    //     to = ranges[`${coord}2`];
-    // }
+    // backwards-compat stuff - to be removed in future
+    if (!ranges[key]) {
+        const index = findIndex(axes, item => item.direction === coord);
+        if (index > -1) {
+            axis = axes[index];
+        }
+        from = ranges[`${coord}1`];
+        to = ranges[`${coord}2`];
+    }
     // auto-reverse as an added bonus
     if (from != null && to != null && from > to) {
         [from, to] = [to, from];
