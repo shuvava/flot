@@ -1581,7 +1581,7 @@ export default class Plot {
                 yoff = 0;
 
                 if (
-                    v != null
+                    Number.isNaN(v)
                     || v < axis.min
                     || v > axis.max
                     // skip those lying on the axes if we got a border
