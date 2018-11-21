@@ -84,6 +84,7 @@ function computeFillBottoms(plot, series, dataPoints) {
     let i = 0;
     let j = 0;
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         if (i >= points.length) {
             break;
