@@ -223,6 +223,12 @@ function tickGenerator(opts, axis) {
             break;
         }
     }
+    if (size === undefined) {
+        // eslint-disable-next-line prefer-destructuring
+        size = spec[spec.length - 1][0];
+        // eslint-disable-next-line prefer-destructuring
+        unit = spec[spec.length - 1][1];
+    }
 
     // special-case the possibility of several years
 
