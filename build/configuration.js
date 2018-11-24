@@ -13,7 +13,7 @@ const config = Object.freeze({
         jquery: 'external',
     },
     babel: {
-        presets: ['env'],
+        presets: ['@babel/env'],
     },
 });
 
