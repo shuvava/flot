@@ -1415,6 +1415,7 @@ export default class Plot {
             this.plotHeight,
             0,
             'rgba(255, 255, 255, 0)',
+            this.ctx,
         );
         this.ctx.fillRect(0, 0, this.plotWidth, this.plotHeight);
         this.ctx.restore();
