@@ -31,6 +31,7 @@ import {
 
 import ColorHelper from './colorhelper';
 import Canvas from './canvas';
+import canvasFactory from './convas-factory';
 
 import { options as defOptions, plotOffset as defPlotOffset, hooks as defHooks } from './plot-defaults';
 
@@ -168,7 +169,7 @@ export default class Plot {
 
                 item = extend(true, item, _data[i]);
 
-                _data[i] = item.data;
+                _data[i].data = item.data;
             } else {
                 item.data = _data[i];
             }
@@ -377,8 +378,10 @@ export default class Plot {
             setStyle(this.placeholder, { position: 'relative' });
         }
 
-        this.surface = new Canvas('flot-base', this.placeholder);
-        this.overlay = new Canvas('flot-overlay', this.placeholder); // overlay canvas for interactive features
+        this.surface = canvasFactory.createInstance('flot-base', this.placeholder);
+        // new Canvas('flot-base', this.placeholder);
+        this.overlay = canvasFactory.createInstance('flot-overlay', this.placeholder); 
+        // new Canvas('flot-overlay', this.placeholder); // overlay canvas for interactive features
         this.eventHolder = this.overlay.element;
 
         this.ctx = this.surface.context;
@@ -2180,10 +2183,12 @@ export default class Plot {
 
         // save options on axes for future reference
         for (let i = 0; i < this.options.xaxes.length; i += 1) {
-            this.getOrCreateAxis(this.xaxes, i + 1).options = this.options.xaxes[i];
+            const axis = this.getOrCreateAxis(this.xaxes, i + 1);
+            axis.options = this.options.xaxes[i];
         }
         for (let i = 0; i < this.options.yaxes.length; i += 1) {
-            this.getOrCreateAxis(this.yaxes, i + 1).options = this.options.yaxes[i];
+            const axis = this.getOrCreateAxis(this.yaxes, i + 1)
+            axis.options = this.options.yaxes[i];
         }
 
         // add hooks from options

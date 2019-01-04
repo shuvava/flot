@@ -71,11 +71,11 @@ export default class Canvas {
         // but its screen is actually 640px wide.  It therefore has a pixel
         // ratio of 2, while most normal devices have a ratio of 1.
         const devicePixelRatio = window.devicePixelRatio || 1;
-        const backingStoreRatio = this.context.webkitBackingStorePixelRatio ||
-            this.context.mozBackingStorePixelRatio ||
-            this.context.msBackingStorePixelRatio ||
-            this.context.oBackingStorePixelRatio ||
-            this.context.backingStorePixelRatio || 1;
+        const backingStoreRatio = this.context.webkitBackingStorePixelRatio
+            || this.context.mozBackingStorePixelRatio
+            || this.context.msBackingStorePixelRatio
+            || this.context.oBackingStorePixelRatio
+            || this.context.backingStorePixelRatio || 1;
         this.pixelRatio = devicePixelRatio / backingStoreRatio;
 
         // Size the canvas to match the internal dimensions of its container
@@ -89,6 +89,7 @@ export default class Canvas {
         // re-calculating them when the plot is re-rendered in a loop.
         this._textCache = {};
     }
+
     /**
      * Resizes the canvas to the given dimensions.
      * @param {number} width New width of the canvas, in pixels.
@@ -130,12 +131,14 @@ export default class Canvas {
 
         context.scale(pixelRatio, pixelRatio);
     }
+
     /**
      * Clears the entire canvas area, not including any overlaid HTML text
      */
     clear() {
         this.context.clearRect(0, 0, this.width, this.height);
     }
+
     /**
      * Finishes rendering the canvas, including managing the text overlay.
      */
@@ -186,6 +189,7 @@ export default class Canvas {
             }
         }
     }
+
     /**
      * Creates (if necessary) and returns the text overlay container.
      * @param {string} classes classes String of space-separated CSS classes used to  uniquely identify the text layer.
@@ -217,6 +221,7 @@ export default class Canvas {
 
         return layer;
     }
+
     /**
      * Creates (if necessary) and returns a text info object.
      * The object looks like this:
@@ -306,6 +311,7 @@ export default class Canvas {
 
         return styleCache[text];
     }
+
     /**
      * Adds a text string to the canvas text overlay.
      *
@@ -373,6 +379,7 @@ export default class Canvas {
             'text-align': halign, // In case the text wraps
         });
     }
+
     /**
      * Removes one or more text strings from the canvas text overlay.
      *
