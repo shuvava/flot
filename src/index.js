@@ -6,6 +6,7 @@ import flotCategories from './flot-categories'; // this plugin should be added a
 import flotStack from './flot-stack';
 import flotFillBetween from './flot-fillbetween';
 import flotTime from './flot-time';
+import flotCanvas from './flot-canvas';
 import ColorHelper from './colorhelper';
 
 if (window.$) {
@@ -26,6 +27,7 @@ if (window.$) {
     window.$.plot.plugins.push(flotStack);
     window.$.plot.plugins.push(flotFillBetween);
     window.$.plot.plugins.push(flotTime);
+    window.$.plot.plugins.push(flotCanvas);
 }
 /* example of using compile directives of webpack
 in debug version it will be transformed into

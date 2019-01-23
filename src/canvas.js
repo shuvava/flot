@@ -214,8 +214,8 @@ export default class Canvas {
         }
 
         const layer = document.createElement('div');
-        addClass(this.textContainer, classes);
-        setStyle(this.textContainer, __textContainerStyle__);
+        addClass(layer, classes);
+        setStyle(layer, __textContainerStyle__);
         appendTo(this.textContainer, layer);
         this.text[classes] = layer;
 
