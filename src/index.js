@@ -7,6 +7,10 @@ import flotStack from './flot-stack';
 import flotFillBetween from './flot-fillbetween';
 import flotTime from './flot-time';
 import flotCanvas from './flot-canvas';
+import {
+    pluginConfig as flotImage,
+    loadDataImages,
+} from './flot-image';
 import ColorHelper from './colorhelper';
 
 if (window.$) {
@@ -28,6 +32,8 @@ if (window.$) {
     window.$.plot.plugins.push(flotFillBetween);
     window.$.plot.plugins.push(flotTime);
     window.$.plot.plugins.push(flotCanvas);
+    window.$.plot.plugins.push(flotImage);
+    window.$.plot.image = { loadDataImages };
 }
 /* example of using compile directives of webpack
 in debug version it will be transformed into

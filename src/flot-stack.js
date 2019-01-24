@@ -196,4 +196,3 @@ export default Object.freeze({
     name: _MODE_TYPE_,
     version: '1.0',
 });
-
