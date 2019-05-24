@@ -73,13 +73,15 @@ function load(urls, callback) {
     }
 
     forEach(urls, (url) => {
-        missing -= 1;
-        const element = document.createElement('img');
-        element.setAttribute('src', url);
-        loaded[url] = element;
-        if (missing === 0) {
-            callback(loaded);
-        }
+        const element = new Image();
+        element.src = url;
+        element.onload = () => {
+            missing -= 1;
+            loaded[url] = element;
+            if (missing === 0) {
+                callback(loaded);
+            }
+        };
     });
 }
 
