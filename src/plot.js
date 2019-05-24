@@ -1989,7 +1989,7 @@ export default class Plot {
      * @param {Function} seriesFilter
      */
     triggerClickHoverEvent(eventname, event, seriesFilter) {
-        const _offset = this.eventHolder.offset();
+        const _offset = offset(this.eventHolder);
         const canvasX = event.pageX - _offset.left - this.plotOffset.left;
         const canvasY = event.pageY - _offset.top - this.plotOffset.top;
         const pos = this.canvasToAxisCoords({ left: canvasX, top: canvasY });
@@ -2206,8 +2206,8 @@ export default class Plot {
     bindEvents() {
         // bind events
         if (this.options.grid.hoverable) {
-            this.eventHolder.addEventListener('mousemove', this.onMouseMove);
-            this.eventHolder.addEventListener('mouseleave', this.onMouseLeave);
+            this.eventHolder.addEventListener('mousemove', this.onMouseMove.bind(this));
+            this.eventHolder.addEventListener('mouseleave', this.onMouseLeave.bind(this));
         }
         if (this.options.grid.clickable) {
             this.eventHolder.addEventListener('click', this.onClick);
@@ -2216,8 +2216,8 @@ export default class Plot {
     }
 
     unbindEvents() {
-        this.eventHolder.removeEventListener('mousemove', this.onMouseMove);
-        this.eventHolder.removeEventListener('mouseleave', this.onMouseLeave);
+        this.eventHolder.removeEventListener('mousemove', this.onMouseMove.bind(this));
+        this.eventHolder.removeEventListener('mouseleave', this.onMouseLeave.bind(this));
         this.eventHolder.removeEventListener('click', this.onClick);
     }
 
