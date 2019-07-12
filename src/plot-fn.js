@@ -1,5 +1,5 @@
-import ColorHelper from './colorhelper';
 import findIndex from 'lodash/findIndex';
+import ColorHelper from './colorhelper';
 
 function axisNumber(obj, coord) {
     let axis = obj[`${coord}axis`];

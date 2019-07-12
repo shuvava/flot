@@ -380,7 +380,7 @@ export default class Plot {
 
         this.surface = canvasFactory.createInstance('flot-base', this.placeholder);
         // new Canvas('flot-base', this.placeholder);
-        this.overlay = canvasFactory.createInstance('flot-overlay', this.placeholder); 
+        this.overlay = canvasFactory.createInstance('flot-overlay', this.placeholder);
         // new Canvas('flot-overlay', this.placeholder); // overlay canvas for interactive features
         this.eventHolder = this.overlay.element;
 
@@ -2187,7 +2187,7 @@ export default class Plot {
             axis.options = this.options.xaxes[i];
         }
         for (let i = 0; i < this.options.yaxes.length; i += 1) {
-            const axis = this.getOrCreateAxis(this.yaxes, i + 1)
+            const axis = this.getOrCreateAxis(this.yaxes, i + 1);
             axis.options = this.options.yaxes[i];
         }
 

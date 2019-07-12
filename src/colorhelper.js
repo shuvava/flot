@@ -159,10 +159,10 @@ export default class ColorHelper {
         }
         return `rgb(${this.r},${this.g},${this.b},${this.a})`;
     }
+
     clone() {
         return new ColorHelper({
             r: this.r, g: this.g, b: this.b, a: this.a,
         });
     }
 }
-
