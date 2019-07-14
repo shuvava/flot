@@ -362,6 +362,17 @@ function show(element) {
     element.style.display = 'block';
 }
 
+/**
+ * vanilla implementation jQuery trigger Fn
+ * @param {element} element Existing element of DOM
+ * @param {string} eventName event to trigger
+ * @param {array<Any>} args custom arguments
+ */
+function trigger(element, eventName, args) {
+    const event = new CustomEvent(eventName, { detail: args });
+    element.dispatchEvent(event);
+}
+
 function noop() {}
 
 export {
@@ -391,4 +402,5 @@ export {
     outerWidth,
     hide,
     show,
+    trigger,
 };

@@ -1,4 +1,4 @@
-/* globals describe it assert expect */
+/* globals assert expect */
 import $ from 'jquery';
 import {
     appendTo, setStyle, getChildren,

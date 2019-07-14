@@ -1,9 +1,10 @@
-import { assert, expect } from 'chai';
+/* globals assert expect */
 import {
     appendTo, setStyle, getChildren,
     detach, addClass, insertAfter, clone,
     extend, offset, domData, removeData,
     empty, html, remove,
+    trigger,
 } from '../src/flot-fn-vanilla';
 
 
@@ -257,6 +258,35 @@ describe(_module_, () => {
             remove(elm, `.${testClass}`);
             const cnt = getChildren(elm, `.${testClass}`).length;
             assert.isTrue(cnt === 0);
+        });
+    });
+
+    describe('#trigger', () => {
+        const id = `${_module_}-trigger`;
+        const body = document.getElementsByTagName('body')[0];
+        const testClass = 'test-trigger';
+        const elm = document.createElement('form');
+        elm.setAttribute('id', id);
+        elm.innerHTML = `<div class="${testClass}-1">${id}</div>`;
+        appendTo(body, elm);
+        it('should has call subscribed on event observer', (done) => {
+            elm.addEventListener('click', (evt) => {
+                evt.preventDefault();
+                done();
+            }, false);
+            trigger(elm, 'click');
+        });
+        it('should pass custom args into event observer', (done) => {
+            elm.addEventListener('click1', (evt) => {
+                const args = evt.detail;
+                assert.isArray(args);
+                assert.isTrue(args.length === 2);
+                assert.sameMembers(args, [1, 'true']);
+                evt.preventDefault();
+                done();
+            }, false);
+            trigger(elm, 'click1', [1, 'true']);
+            setTimeout(() => done(), 1000);
         });
     });
 });

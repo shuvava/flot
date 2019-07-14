@@ -1,5 +1,4 @@
-/* globals describe it assert */
-// import { assert } from 'chai';
+/* globals assert */
 import $ from 'jquery';
 
 describe('jQuery', () => {

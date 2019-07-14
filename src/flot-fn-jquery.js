@@ -229,6 +229,16 @@ function show(element) {
     $(element).show();
 }
 
+/**
+ * abstraction from jQuery trigger Fn
+ * @param {element} element Existing element of DOM
+ * @param {eventType} event event to trigger
+ * @param {array<Any>} args custom arguments
+ */
+function trigger(element, event, args) {
+    $(element).trigger(event, args);
+}
+
 export {
     getChildren,
     getStyle,
@@ -254,4 +264,5 @@ export {
     outerHeight,
     hide,
     show,
+    trigger,
 };

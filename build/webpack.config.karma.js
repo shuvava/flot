@@ -9,12 +9,13 @@ module.exports = (env) => {
         context: env.rootPath,
         module: {
             rules: [
-                {
-                    test: /\.js$/,
-                    use: { loader: 'istanbul-instrumenter-loader' },
-                    include: path.resolve(env.rootPath, './src'),
-                    enforce: 'post',
-                },
+                // {
+                //     test: /\.js$/,
+                //     use: { loader: 'istanbul-instrumenter-loader' },
+                //     include: path.resolve(env.rootPath, './src'),
+                //     exclude: /(node_modules)/,
+                //     // enforce: 'post',
+                // },
                 {
                     test: path.resolve(env.rootPath, '/bak/jquery.js'),
                     use: [

@@ -1,4 +1,4 @@
-/* globals describe it assert */
+/* globals assert */
 import ColorHelper from '../src/colorhelper';
 
 describe('ColorHelper', () => {
