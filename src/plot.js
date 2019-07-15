@@ -7,7 +7,7 @@ import {
     extend, offset,
     domData, removeData, empty,
     html, remove, extractColor,
-    getWidth, getHeight,
+    getWidth, getHeight, trigger,
 } from './flot-fn-jquery';
 
 import {
@@ -571,8 +571,8 @@ export default class Plot {
     }
 
     resize() {
-        const width = this.placeholder.width();
-        const height = this.placeholder.height();
+        const width = getWidth(this.placeholder);
+        const height = getHeight(this.placeholder);
         this.surface.resize(width, height);
         this.overlay.resize(width, height);
     }
@@ -2020,7 +2020,7 @@ export default class Plot {
             }
         }
 
-        this.placeholder.trigger(eventname, [pos, item]);
+        trigger(this.placeholder, eventname, [pos, item]);
     }
 
     // #endregion

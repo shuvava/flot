@@ -12,11 +12,12 @@ import {
     loadDataImages,
 } from './flot-image';
 import ColorHelper from './colorhelper';
+import flotResize from './flot-resize';
 
 if (window.$) {
     window.$.plot = (placeholder, data, options) => {
         const t0 = new Date();
-        const plot = new Plot(window.$(placeholder), data, options, $.plot.plugins);
+        const plot = new Plot(placeholder, data, options, $.plot.plugins);
         (window.console ? console.log : alert)(`time used (msecs): ${(new Date()).getTime() - t0.getTime()}`);
         return plot;
     };
@@ -33,6 +34,7 @@ if (window.$) {
     window.$.plot.plugins.push(flotTime);
     window.$.plot.plugins.push(flotCanvas);
     window.$.plot.plugins.push(flotImage);
+    window.$.plot.plugins.push(flotResize);
     window.$.plot.image = { loadDataImages };
 }
 /* example of using compile directives of webpack

@@ -16,6 +16,8 @@ import {
     hide,
     show,
     html,
+    getWidth,
+    getHeight,
 } from './flot-fn-jquery';
 
 // TODO: [VS] switch to vanilla implementation
@@ -79,7 +81,7 @@ export default class Canvas {
         this.pixelRatio = devicePixelRatio / backingStoreRatio;
 
         // Size the canvas to match the internal dimensions of its container
-        this.resize(container.width(), container.height());
+        this.resize(getWidth(container), getHeight(container));
 
         // Collection of HTML div layers for text overlaid onto the canvas
         this.textContainer = null;
