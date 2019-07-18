@@ -239,6 +239,36 @@ function trigger(element, event, args) {
     $(element).trigger(event, args);
 }
 
+/**
+ * abstraction from jQuery one Fn
+ * @param {element} element Existing element of DOM
+ * @param {string} event event to trigger
+ * @param {function} callback callback function
+ */
+function once(element, event, callback) {
+    $(element).one(event, callback);
+}
+
+/**
+ * abstraction from jQuery on Fn
+ * @param {element} element Existing element of DOM
+ * @param {string} event event to trigger
+ * @param {function} callback callback function
+ */
+function on(element, event, callback) {
+    $(element).on(event, callback);
+}
+
+/**
+ * abstraction from jQuery unbind Fn
+ * @param {element} element Existing element of DOM
+ * @param {string} event event to trigger
+ * @param {function} callback callback function
+ */
+function unbind(element, event, callback) {
+    $(element).unbind(event, callback);
+}
+
 export {
     getChildren,
     getStyle,
@@ -265,4 +295,7 @@ export {
     hide,
     show,
     trigger,
+    on,
+    once,
+    unbind,
 };

@@ -369,8 +369,38 @@ function show(element) {
  * @param {array<Any>} args custom arguments
  */
 function trigger(element, eventName, args) {
-    const event = new CustomEvent(eventName, { detail: args });
+    const event = new CustomEvent(eventName, { detail: args, bubbles: true, cancelable: true });
     element.dispatchEvent(event);
+}
+
+/**
+ * vanilla implementation jQuery on Fn
+ * @param {element} element Existing element of DOM
+ * @param {string} event event to trigger
+ * @param {function} callback callback function
+ */
+function on(element, event, callback) {
+    element.addEventListener(event, callback);
+}
+
+/**
+ * vanilla implementation jQuery one Fn
+ * @param {element} element Existing element of DOM
+ * @param {string} event event to trigger
+ * @param {function} callback callback function
+ */
+function once(element, event, callback) {
+    element.addEventListener(event, callback, { once: true });
+}
+
+/**
+ * vanilla implementation jQuery unbind Fn
+ * @param {element} element Existing element of DOM
+ * @param {string} event event to trigger
+ * @param {function} callback callback function
+ */
+function unbind(element, event, callback) {
+    element.removeEventListener(event, callback);
 }
 
 function noop() {}
@@ -403,4 +433,7 @@ export {
     hide,
     show,
     trigger,
+    on,
+    once,
+    unbind,
 };

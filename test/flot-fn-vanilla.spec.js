@@ -4,7 +4,7 @@ import {
     detach, addClass, insertAfter, clone,
     extend, offset, domData, removeData,
     empty, html, remove,
-    trigger,
+    trigger, once,
 } from '../src/flot-fn-vanilla';
 
 
@@ -287,6 +287,23 @@ describe(_module_, () => {
             }, false);
             trigger(elm, 'click1', [1, 'true']);
             setTimeout(() => done(), 1000);
+        });
+    });
+
+    describe('#one', () => {
+        const id = `${_module_}-one`;
+        const body = document.getElementsByTagName('body')[0];
+        const testClass = 'test-one';
+        const elm = document.createElement('form');
+        elm.setAttribute('id', id);
+        elm.innerHTML = `<div class="${testClass}-1">${id}</div>`;
+        appendTo(body, elm);
+        it('should has call subscribed on event observer', (done) => {
+            once(elm, 'click', (evt) => {
+                evt.preventDefault();
+                done();
+            });
+            trigger(elm, 'click');
         });
     });
 });
