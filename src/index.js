@@ -14,6 +14,7 @@ import {
 import ColorHelper from './colorhelper';
 import flotResize from './flot-resize';
 import flotSelection from './flot-selection';
+import flotErrorBars from './flot-errorbars';
 
 if (window.$) {
     window.$.plot = (placeholder, data, options) => {
@@ -39,6 +40,7 @@ if (window.$) {
     window.$.plot.plugins.push(flotImage);
     window.$.plot.plugins.push(flotResize);
     window.$.plot.plugins.push(flotSelection);
+    window.$.plot.plugins.push(flotErrorBars);
     window.$.plot.image = { loadDataImages };
 }
 /* example of using compile directives of webpack

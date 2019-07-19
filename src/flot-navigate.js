@@ -78,7 +78,10 @@ use the p2c helpers on the axes in Flot to help you convert between these).
 1 is 100% (i.e. no change), 1.5 is 150% (zoom in), 0.7 is 70% (zoom out). You
 can set the default in the options.
 
- */
+*/
+import {
+    trigger, on, once, unbind, offset as getOffset,
+} from './flot-fn-jquery';
 
 const _MODE_TYPE_ = 'navigate';
 
@@ -108,17 +111,17 @@ function bindEvents(plot, eventHolder) {
 
     if (o.pan.interactive) {
         eventHolder.bind('dragstart', { distance: 10 }, onDragStart);
-        eventHolder.bind('drag', onDrag);
-        eventHolder.bind('dragend', onDragEnd);
+        on(eventHolder, 'drag', onDrag);
+        on(eventHolder, 'dragend', onDragEnd);
     }
 }
 
 function shutdown(plot, eventHolder) {
-    eventHolder.unbind(plot.getOptions().zoom.trigger, onZoomClick);
-    eventHolder.unbind('mousewheel', onMouseWheel);
-    eventHolder.unbind('dragstart', onDragStart);
-    eventHolder.unbind('drag', onDrag);
-    eventHolder.unbind('dragend', onDragEnd);
+    unbind(eventHolder, plot.getOptions().zoom.trigger, onZoomClick);
+    unbind(eventHolder, 'mousewheel', onMouseWheel);
+    unbind(eventHolder, 'dragstart', onDragStart);
+    unbind(eventHolder, 'drag', onDrag);
+    unbind(eventHolder, 'dragend', onDragEnd);
     if (panTimeout) {
         clearTimeout(panTimeout);
     }
